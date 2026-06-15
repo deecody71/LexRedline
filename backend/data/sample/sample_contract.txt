@@ -1,0 +1,33 @@
+"SAMPLE CONTRACT"
+
+1. Definitions. "Agreement" means this Master Services Agreement. "Confidential Information" means any information disclosed by one party to the other under this Agreement.
+
+2. Services. Provider shall perform the services described in each Statement of Work executed by the parties. Provider shall deliver all deliverables set forth in each SOW.
+
+3. Payment Terms. Client shall pay all invoices within thirty (30) days of receipt. Late payments shall accrue interest at 1.5% per month.
+
+4. Term and Termination. This Agreement shall commence on the Effective Date and continue for one (1) year. Either party may terminate this Agreement for any reason upon thirty (30) days written notice. Either party may terminate immediately if the other party materially breaches and fails to cure within thirty (30) days.
+
+5. Limitation of Liability. Neither party's total aggregate liability arising out of or related to this Agreement shall exceed the total fees paid by Client to Provider during the twelve (12) months preceding the claim. This limitation does not apply to indemnification obligations, breach of confidentiality, or intellectual property infringement.
+
+6. Indemnification. Provider shall indemnify, defend, and hold harmless Client from and against any third-party claims arising out of Provider's breach of this Agreement or negligence. Client shall indemnify Provider against claims arising from Client's breach.
+
+7. Confidentiality. Each party agrees to maintain the confidentiality of the other party's Confidential Information for a period of three (3) years after termination. Neither party shall disclose Confidential Information to any third party without the disclosing party's prior written consent.
+
+8. Governing Law. This Agreement shall be governed by the laws of the State of Delaware, without regard to its conflict of laws principles. The parties submit to the exclusive jurisdiction of the courts located in Delaware.
+
+9. Warranty. Provider warrants that the Services will be performed in a professional manner consistent with industry standards. Provider warrants that Deliverables will conform to applicable SOW specifications for ninety (90) days following delivery.
+
+10. Force Majeure. Neither party shall be liable for any failure or delay in performance due to causes beyond its reasonable control, including but not limited to acts of God, war, terrorism, pandemic, epidemic, government action, fire, flood, and labor disputes.
+
+11. Assignment. Neither party may assign this Agreement without the other party's prior written consent, which shall not be unreasonably withheld.
+
+12. Entire Agreement. This Agreement constitutes the entire agreement between the parties and supersedes all prior agreements and understandings. This Agreement may not be amended except by a written instrument signed by both parties.
+
+13. Insurance. Provider shall maintain general liability insurance with limits of $1,000,000 per occurrence and $2,000,000 aggregate.
+
+14. Data Protection. Each party shall comply with all applicable data protection laws. Provider shall implement appropriate technical measures to protect personal data.
+
+15. Non-Compete. During the term and for one (1) year thereafter, Provider shall not engage in any competing business within a 50-mile radius.
+
+IN WITNESS WHEREOF, the parties have executed this Agreement as of the date first written above.

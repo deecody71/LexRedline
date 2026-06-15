@@ -1,0 +1,40 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 0, 0, 0;
+  --background-start-rgb: 214, 219, 220;
+  --background-end-rgb: 255, 255, 255;
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: white;
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-accent-blue text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors;
+  }
+  
+  .risk-badge {
+    @apply px-2 py-1 rounded-full text-xs font-semibold uppercase;
+  }
+  
+  .risk-badge-low {
+    @apply bg-risk-low/20 text-risk-low border border-risk-low/30;
+  }
+  
+  .risk-badge-med {
+    @apply bg-risk-med/20 text-risk-med border border-risk-med/30;
+  }
+  
+  .risk-badge-high {
+    @apply bg-risk-high/20 text-risk-high border border-risk-high/30;
+  }
+  
+  .risk-badge-critical {
+    @apply bg-risk-critical/20 text-risk-critical border border-risk-critical/30;
+  }
+}
