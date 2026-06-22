@@ -1,21 +1,128 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { ChevronRight, ChevronDown, AlertTriangle, CheckCircle, Info, ArrowRight, FileText } from "lucide-react";
+import { useState, useEffect, useRef, useMemo } from "react";
+import { ChevronRight, ChevronDown, AlertTriangle, CheckCircle, Info, ArrowRight, FileText, Trash2 } from "lucide-react";
 import { useAnalysis } from "@/context/AnalysisContext";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
+import { SAMPLE_DATA } from "@/lib/sampleData";
+import { getStoredContractById, StoredContract } from "@/lib/storage";
 
 export default function ReviewPage() {
   const { id } = useParams();
-  const { result } = useAnalysis();
+  const router = useRouter();
+  const { result: contextResult } = useAnalysis();
+  const [result, setResult] = useState<any>(null);
   const [expandedId, setExpandedId] = useState<number | null>(0);
+  const [acceptedRedlines, setAcceptedRedlines] = useState<Set<number>>(new Set());
+  const [dismissedRedlines, setDismissedRedlines] = useState<Set<number>>(new Set());
+  const textContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    // 1. Try context (from fresh upload)
+    if (contextResult && (contextResult.job_id === id)) {
+      setResult(contextResult);
+      return;
+    }
+
+    // 2. Try sample data
+    if (typeof id === 'string' && SAMPLE_DATA[id]) {
+      setResult(SAMPLE_DATA[id]);
+      return;
+    }
+
+    // 3. Try storage
+    if (typeof id === 'string') {
+      const stored = getStoredContractById(id);
+      if (stored) {
+        setResult(stored.result);
+        return;
+      }
+    }
+  }, [id, contextResult]);
+
+  // Derived state: the document text with accepted redlines
+  const processedTextSegments = useMemo(() => {
+    if (!result) return [];
+    
+    let text = result.full_text;
+    const segments: { text: string; isAccepted?: boolean; index?: number }[] = [];
+    
+    // Sort redlines by their position in text to process linearly
+    // Since we don't have indices, we'll find them
+    const sortedRedlines = result.redlines
+      .map((rl: any, idx: number) => ({ ...rl, originalIndex: idx, pos: text.indexOf(rl.original_text) }))
+      .filter((rl: any) => rl.pos !== -1)
+      .sort((a: any, b: any) => a.pos - b.pos);
+    
+    let lastIndex = 0;
+    for (const rl of sortedRedlines) {
+      // Add text before the redline
+      if (rl.pos > lastIndex) {
+        segments.push({ text: text.substring(lastIndex, rl.pos) });
+      }
+      
+      const isAccepted = acceptedRedlines.has(rl.originalIndex);
+      segments.push({ 
+        text: isAccepted ? rl.suggested_text : rl.original_text, 
+        isAccepted,
+        index: rl.originalIndex
+      });
+      
+      lastIndex = rl.pos + rl.original_text.length;
+    }
+    
+    // Add remaining text
+    if (lastIndex < text.length) {
+      segments.push({ text: text.substring(lastIndex) });
+    }
+    
+    return segments;
+  }, [result, acceptedRedlines]);
+
+  const scrollToText = (searchText: string) => {
+    if (!textContainerRef.current) return;
+    const container = textContainerRef.current;
+    
+    // Find the element containing the text
+    const elements = container.querySelectorAll('[data-original-text]');
+    for (const el of Array.from(elements)) {
+      if (el.getAttribute('data-original-text') === searchText) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        // Highlight briefly
+        el.classList.add('ring-4', 'ring-yellow-200', 'ring-opacity-50');
+        setTimeout(() => {
+          el.classList.remove('ring-4', 'ring-yellow-200', 'ring-opacity-50');
+        }, 2000);
+        return;
+      }
+    }
+  };
+
+  const handleAcceptRedline = (index: number) => {
+    setAcceptedRedlines(prev => new Set(prev).add(index));
+    setDismissedRedlines(prev => {
+      const next = new Set(prev);
+      next.delete(index);
+      return next;
+    });
+    setExpandedId(null);
+  };
+
+  const handleDismissRedline = (index: number) => {
+    setDismissedRedlines(prev => new Set(prev).add(index));
+    setAcceptedRedlines(prev => {
+      const next = new Set(prev);
+      next.delete(index);
+      return next;
+    });
+    setExpandedId(null);
+  };
 
   if (!result) {
     return (
       <div className="flex flex-col items-center justify-center h-[calc(100vh-4rem)] bg-slate-50">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent-blue mb-4"></div>
         <p className="text-slate-500 font-medium">Loading analysis result...</p>
-        <p className="text-xs text-slate-400 mt-2">If this takes too long, please try uploading the file again.</p>
       </div>
     );
   }
@@ -33,8 +140,19 @@ export default function ReviewPage() {
             <span className="text-xs text-slate-400 font-sans tracking-tighter">Parsed at: {result.parsed_at ? new Date(result.parsed_at).toLocaleString() : 'N/A'}</span>
           </div>
           
-          <div className="whitespace-pre-wrap font-serif text-base text-slate-800">
-            {result.full_text}
+          <div 
+            ref={textContainerRef}
+            className="whitespace-pre-wrap font-serif text-base text-slate-800"
+          >
+            {processedTextSegments.map((segment, i) => (
+              <span 
+                key={i} 
+                className={segment.isAccepted ? "bg-green-100 text-green-900 px-1 rounded border-b border-green-300" : ""}
+                data-original-text={segment.index !== undefined ? result.redlines[segment.index].original_text : undefined}
+              >
+                {segment.text}
+              </span>
+            ))}
           </div>
           
           <div className="mt-12 pt-8 border-t border-slate-200 text-slate-400 text-xs italic font-sans text-center">
@@ -62,75 +180,103 @@ export default function ReviewPage() {
         </div>
 
         <div className="divide-y divide-slate-100">
-          {result.redlines.map((item, index) => (
-            <div key={index} className={`p-4 transition-colors ${expandedId === index ? 'bg-blue-50/30' : 'hover:bg-slate-50'}`}>
-              <button 
-                onClick={() => setExpandedId(expandedId === index ? null : index)}
-                className="w-full text-left"
+          {result.redlines.map((item: any, index: number) => {
+            const isAccepted = acceptedRedlines.has(index);
+            const isDismissed = dismissedRedlines.has(index);
+            
+            return (
+              <div 
+                key={index} 
+                className={`p-4 transition-colors ${expandedId === index ? 'bg-blue-50/30' : 'hover:bg-slate-50'} ${(isAccepted || isDismissed) ? 'opacity-50' : ''}`}
               >
-                <div className="flex justify-between items-start mb-2">
-                  <span className="font-bold text-navy text-sm">{item.clause_type.replace(/_/g, ' ').toUpperCase()}</span>
-                  <span className={`risk-badge ${
-                    item.priority >= 3 ? 'risk-badge-high' : 
-                    item.priority >= 2 ? 'risk-badge-med' : 'risk-badge-low'
-                  }`}>
-                    P{item.priority}
-                  </span>
-                </div>
-                <p className="text-xs text-slate-600 line-clamp-2 mb-2 italic bg-slate-100 p-2 rounded">
-                  "{item.original_text}"
-                </p>
-                <div className="flex items-center text-xs text-accent-blue font-medium">
-                  {expandedId === index ? (
-                    <>
-                      <ChevronDown className="w-3 h-3 mr-1" />
-                      Hide Details
-                    </>
-                  ) : (
-                    <>
-                      <ChevronRight className="w-3 h-3 mr-1" />
-                      View Suggestions
-                    </>
-                  )}
-                </div>
-              </button>
-
-              {expandedId === index && (
-                <div className="mt-4 pt-4 border-t border-slate-100 animate-in fade-in slide-in-from-top-1">
-                  <div className="mb-4">
-                    <h4 className="text-[10px] uppercase tracking-wider font-bold text-slate-400 mb-2">Issue / Risk</h4>
-                    <div className="bg-white border border-slate-100 rounded p-3 text-xs text-slate-700 shadow-sm">
-                      {item.risk_reason}
+                <button 
+                  onClick={() => {
+                    setExpandedId(expandedId === index ? null : index);
+                    if (expandedId !== index) scrollToText(item.original_text);
+                  }}
+                  className="w-full text-left"
+                >
+                  <div className="flex justify-between items-start mb-2">
+                    <div className="flex items-center">
+                      {isAccepted && <CheckCircle className="w-4 h-4 text-green-500 mr-2" />}
+                      {isDismissed && <Trash2 className="w-4 h-4 text-slate-400 mr-2" />}
+                      <span className="font-bold text-navy text-sm uppercase tracking-tight">
+                        {item.clause_type.replace(/_/g, ' ')}
+                      </span>
                     </div>
+                    {!isAccepted && !isDismissed && (
+                      <span className={`risk-badge ${
+                        item.priority >= 3 ? 'risk-badge-high' : 
+                        item.priority >= 2 ? 'risk-badge-med' : 'risk-badge-low'
+                      }`}>
+                        P{item.priority}
+                      </span>
+                    )}
                   </div>
+                  <p className={`text-xs text-slate-600 line-clamp-2 mb-2 italic p-2 rounded ${isAccepted ? 'bg-green-50' : 'bg-slate-100'}`}>
+                    "{isAccepted ? item.suggested_text : item.original_text}"
+                  </p>
                   
-                  <div>
-                    <h4 className="text-[10px] uppercase tracking-wider font-bold text-slate-400 mb-2">Suggested Redline</h4>
-                    <div className="bg-white border border-blue-100 rounded p-3 text-xs text-slate-700 leading-relaxed shadow-sm border-l-4 border-l-accent-blue">
-                      {item.suggested_text}
+                  {!isAccepted && !isDismissed && (
+                    <div className="flex items-center text-xs text-accent-blue font-medium">
+                      {expandedId === index ? (
+                        <>
+                          <ChevronDown className="w-3 h-3 mr-1" />
+                          Hide Details
+                        </>
+                      ) : (
+                        <>
+                          <ChevronRight className="w-3 h-3 mr-1" />
+                          View Suggestions
+                        </>
+                      )}
+                    </div>
+                  )}
+                  {isAccepted && <span className="text-[10px] text-green-600 font-bold uppercase">Accepted</span>}
+                  {isDismissed && <span className="text-[10px] text-slate-400 font-bold uppercase">Dismissed</span>}
+                </button>
+
+                {expandedId === index && !isAccepted && !isDismissed && (
+                  <div className="mt-4 pt-4 border-t border-slate-100 animate-in fade-in slide-in-from-top-1">
+                    <div className="mb-4">
+                      <h4 className="text-[10px] uppercase tracking-wider font-bold text-slate-400 mb-2">Issue / Risk</h4>
+                      <div className="bg-white border border-slate-100 rounded p-3 text-xs text-slate-700 shadow-sm">
+                        {item.risk_reason}
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <h4 className="text-[10px] uppercase tracking-wider font-bold text-slate-400 mb-2">Suggested Redline</h4>
+                      <div className="bg-white border border-blue-100 rounded p-3 text-xs text-slate-700 leading-relaxed shadow-sm border-l-4 border-l-accent-blue">
+                        {item.suggested_text}
+                      </div>
+                    </div>
+
+                    <div className="mt-4 flex space-x-2">
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleAcceptRedline(index);
+                        }}
+                        className="flex-1 bg-accent-blue text-white py-2 rounded text-xs font-bold hover:bg-blue-700 transition-colors shadow-sm"
+                      >
+                        Accept Redline
+                      </button>
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDismissRedline(index);
+                        }}
+                        className="flex-1 border border-slate-200 text-slate-700 py-2 rounded text-xs font-bold hover:bg-slate-50 transition-colors shadow-sm"
+                      >
+                        Dismiss
+                      </button>
                     </div>
                   </div>
-
-                  <div className="mt-4 flex space-x-2">
-                    <button className="flex-1 bg-accent-blue text-white py-2 rounded text-xs font-bold hover:bg-blue-700 transition-colors shadow-sm">
-                      Accept Redline
-                    </button>
-                    <button className="flex-1 border border-slate-200 text-slate-700 py-2 rounded text-xs font-bold hover:bg-slate-50 transition-colors shadow-sm">
-                      Dismiss
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          ))}
-          
-          {result.redlines.length === 0 && (
-            <div className="p-12 text-center">
-              <CheckCircle className="w-12 h-12 text-risk-low mx-auto mb-4 opacity-20" />
-              <p className="text-slate-500 font-medium">No risks detected</p>
-              <p className="text-xs text-slate-400 mt-1">This contract looks good based on standard policies.</p>
-            </div>
-          )}
+                )}
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>

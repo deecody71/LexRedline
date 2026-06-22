@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Upload as UploadIcon, File, X, Check, AlertCircle } from "lucide-react";
 import { analyzeFile } from "@/lib/api";
 import { useAnalysis } from "@/context/AnalysisContext";
+import { saveAnalysisResult } from "@/lib/storage";
 
 export default function UploadPage() {
   const [file, setFile] = useState<File | null>(null);
@@ -32,6 +33,7 @@ export default function UploadPage() {
     
     try {
       const result = await analyzeFile(file);
+      saveAnalysisResult(contractName || file.name, result);
       setResult(result);
       router.push(`/review/${result.job_id}`);
     } catch (err: any) {

@@ -1,7 +1,11 @@
-import Link from "next/link";
-import { FileText, Eye, AlertCircle, CheckCircle2, Clock } from "lucide-react";
+"use client";
 
-const contracts = [
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import { FileText, Eye, AlertCircle, CheckCircle2, Clock } from "lucide-react";
+import { getStoredContracts, StoredContract } from "@/lib/storage";
+
+const sampleContracts = [
   {
     id: "saas-acme",
     name: "SaaS Agreement - Acme Corp",
@@ -32,6 +36,21 @@ const contracts = [
 ];
 
 export default function Dashboard() {
+  const [contracts, setContracts] = useState<any[]>([]);
+
+  useEffect(() => {
+    const stored = getStoredContracts();
+    const formattedStored = stored.map(c => ({
+      ...c,
+      statusIcon: <CheckCircle2 className="w-4 h-4 text-green-500" />
+    }));
+    setContracts([...formattedStored, ...sampleContracts]);
+  }, []);
+  const clearHistory = () => {
+    localStorage.removeItem("lexredline_contracts");
+    setContracts([...sampleContracts]);
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="flex justify-between items-center mb-8">
@@ -39,9 +58,17 @@ export default function Dashboard() {
           <h1 className="text-2xl font-bold text-navy">Contract Reviews</h1>
           <p className="text-slate-500">Monitor and manage your contract risk assessments</p>
         </div>
-        <Link href="/upload" className="btn-primary flex items-center space-x-2">
-          <span>Upload Contract</span>
-        </Link>
+        <div className="flex space-x-4">
+          <button 
+            onClick={clearHistory}
+            className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-800 transition-colors"
+          >
+            Clear History
+          </button>
+          <Link href="/upload" className="btn-primary flex items-center space-x-2">
+            <span>Upload Contract</span>
+          </Link>
+        </div>
       </div>
 
       <div className="bg-white shadow-sm border border-slate-200 rounded-lg overflow-hidden">
