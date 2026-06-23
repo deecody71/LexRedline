@@ -37,9 +37,15 @@ export default function RootLayout({
                 </div>
               </div>
               <div className="flex items-center space-x-4">
-                <div className="h-8 w-8 rounded-full bg-accent-blue flex items-center justify-center text-sm font-bold">
-                  JD
-                </div>
+                <Link href="/login" className="text-sm font-medium hover:text-blue-300 transition-colors">
+                  Sign In
+                </Link>
+                <Link 
+                  href="/signup" 
+                  className="bg-accent-blue hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-bold transition-all"
+                >
+                  Get Started
+                </Link>
               </div>
             </nav>
           </header>
