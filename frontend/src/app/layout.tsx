@@ -28,7 +28,7 @@ export default function RootLayout({
                   Lex<span className="text-accent-blue">Redline</span>
                 </Link>
                 <div className="hidden md:flex space-x-6">
-                  <Link href="/" className="hover:text-blue-300 transition-colors">
+                  <Link href="/dashboard" className="hover:text-blue-300 transition-colors">
                     Dashboard
                   </Link>
                   <Link href="/upload" className="hover:text-blue-300 transition-colors">
