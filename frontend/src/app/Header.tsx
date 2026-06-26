@@ -33,8 +33,8 @@ export default function Header() {
             </SignOutButton>
           ) : (
             <>
-              <Link href="/sign-up" className="bg-accent-blue hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-bold transition-colors">Get Started</Link>
-              <Link href="/sign-in" className="text-white hover:text-blue-300 px-3 py-2 text-sm font-medium transition-colors">Sign In</Link>
+              <Link href="/signup" className="bg-accent-blue hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-bold transition-colors">Get Started</Link>
+              <Link href="/login" className="text-white hover:text-blue-300 px-3 py-2 text-sm font-medium transition-colors">Sign In</Link>
             </>
           )}
         </div>
