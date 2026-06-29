@@ -1,13 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useUser } from "@clerk/nextjs";
 import { Upload as UploadIcon, File, X, Check, AlertCircle } from "lucide-react";
 import { analyzeFile } from "@/lib/api";
 import { useAnalysis } from "@/context/AnalysisContext";
 import { saveAnalysisResult } from "@/lib/storage";
 
 export default function UploadPage() {
+  const { user, isLoaded } = useUser();
   const [file, setFile] = useState<File | null>(null);
   const [contractName, setContractName] = useState("");
   const [isUploading, setIsUploading] = useState(false);
@@ -15,6 +17,20 @@ export default function UploadPage() {
   
   const router = useRouter();
   const { setResult } = useAnalysis();
+
+  useEffect(() => {
+    if (!isLoaded && !user) {
+      router.push("/signup");
+    }
+  }, [user, isLoaded, router]);
+
+  if (!isLoaded || !user) {
+    return (
+      <div className="flex items-center justify-center min-h-[calc(100vh-4rem)]">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-accent-blue"></div>
+      </div>
+    );
+  }
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setError(null);

@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { ChevronRight, ChevronDown, AlertTriangle, CheckCircle, Info, ArrowRight, FileText, Trash2 } from "lucide-react";
 import { useAnalysis } from "@/context/AnalysisContext";
+import { useUser } from "@clerk/nextjs";
 import { useParams, useRouter } from "next/navigation";
 import { SAMPLE_DATA } from "@/lib/sampleData";
 import { getStoredContractById, StoredContract } from "@/lib/storage";
@@ -10,6 +11,7 @@ import { getStoredContractById, StoredContract } from "@/lib/storage";
 export default function ReviewPage() {
   const { id } = useParams();
   const router = useRouter();
+  const { user, isLoaded } = useUser();
   const { result: contextResult } = useAnalysis();
   const [result, setResult] = useState<any>(null);
   const [expandedId, setExpandedId] = useState<number | null>(0);
@@ -18,6 +20,11 @@ export default function ReviewPage() {
   const textContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    if (!isLoaded && !user) {
+      router.push("/signup");
+      return;
+    }
+
     // 1. Try context (from fresh upload)
     if (contextResult && (contextResult.job_id === id)) {
       setResult(contextResult);
@@ -38,7 +45,15 @@ export default function ReviewPage() {
         return;
       }
     }
-  }, [id, contextResult]);
+  }, [id, contextResult, isLoaded, user, router]);
+
+  if (isLoaded || !user) {
+    return (
+      <div className="flex items-center justify-center min-h-[calc(100vh-4rem)]">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-accent-blue"></div>
+      </div>
+    );
+  }
 
   // Derived state: the document text with accepted redlines
   const processedTextSegments = useMemo(() => {
