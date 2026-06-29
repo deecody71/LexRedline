@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useUser } from "@clerk/nextjs";
 import { FileText, Eye, AlertCircle, CheckCircle2, Clock } from "lucide-react";
 import { getStoredContracts, StoredContract } from "@/lib/storage";
 
@@ -36,16 +38,35 @@ const sampleContracts = [
 ];
 
 export default function Dashboard() {
+  const { user, isLoaded } = useUser();
+  const router = useRouter();
   const [contracts, setContracts] = useState<any[]>([]);
 
   useEffect(() => {
+    if (isLoaded && !user) {
+      router.push("/signup");
+      return;
+    }
+
     const stored = getStoredContracts();
     const formattedStored = stored.map(c => ({
       ...c,
       statusIcon: <CheckCircle2 className="w-4 h-4 text-green-500" />
     }));
     setContracts([...formattedStored, ...sampleContracts]);
-  }, []);
+  }, [user, isLoaded, router]);
+
+  if (!isLoaded) {
+    return (
+      <div className="flex items-center justify-center min-h-[calc(100vh-4rem)]">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-accent-blue"></div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return null;
+  }
   const clearHistory = () => {
     localStorage.removeItem("lexredline_contracts");
     setContracts([...sampleContracts]);
