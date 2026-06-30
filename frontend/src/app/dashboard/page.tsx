@@ -44,7 +44,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (isLoaded && !user) {
-      router.push("/signup");
+      router.push("/sign-up");
       return;
     }
 
@@ -62,10 +62,6 @@ export default function Dashboard() {
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-accent-blue"></div>
       </div>
     );
-  }
-
-  if (!user) {
-    return null;
   }
   const clearHistory = () => {
     localStorage.removeItem("lexredline_contracts");

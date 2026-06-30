@@ -21,7 +21,7 @@ export default function ReviewPage() {
 
   useEffect(() => {
     if (isLoaded && !user) {
-      router.push("/signup");
+      router.push("/sign-up");
       return;
     }
 
@@ -47,16 +47,12 @@ export default function ReviewPage() {
     }
   }, [id, contextResult, isLoaded, user, router]);
 
-  if (!isLoaded) {
+  if (isLoaded || !user) {
     return (
       <div className="flex items-center justify-center min-h-[calc(100vh-4rem)]">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-accent-blue"></div>
       </div>
     );
-  }
-
-  if (!user) {
-    return null;
   }
 
   // Derived state: the document text with accepted redlines
