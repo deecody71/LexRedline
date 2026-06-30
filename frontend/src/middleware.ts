@@ -1,4 +1,9 @@
-// Clerk middleware disabled temporarily - auth handled client-side
+import { clerkMiddleware } from "@clerk/nextjs/server";
+
+export default clerkMiddleware();
+
 export const config = {
-  matcher: [],
+  matcher: [
+    "/((?!_next/static|_next/image|favicon.ico|api/v1).*)",
+  ],
 };
