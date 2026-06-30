@@ -15,13 +15,13 @@ export default function LandingPage() {
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-4">
             <Link 
-              href="/signup" 
+              href="/dashboard" 
               className="bg-accent-blue hover:bg-blue-700 text-white px-8 py-4 rounded-md font-bold text-lg transition-all shadow-lg flex items-center justify-center gap-2"
             >
               Try It Now <ArrowRight size={20} />
             </Link>
             <Link 
-              href="/signup" 
+              href="/dashboard" 
               className="bg-white text-navy hover:bg-slate-100 px-8 py-4 rounded-md font-bold text-lg transition-all shadow-lg flex items-center justify-center gap-2"
             >
               Upload Your First Contract
@@ -187,13 +187,13 @@ export default function LandingPage() {
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-4">
             <Link 
-              href="/signup" 
+              href="/dashboard" 
               className="bg-navy hover:bg-slate-800 text-white px-8 py-4 rounded-md font-bold text-lg transition-all shadow-lg flex items-center justify-center gap-2"
             >
               Access Dashboard <CheckCircle size={20} />
             </Link>
             <Link 
-              href="/signup" 
+              href="/dashboard" 
               className="bg-transparent border border-navy text-navy hover:bg-navy hover:text-white px-8 py-4 rounded-md font-bold text-lg transition-all flex items-center justify-center gap-2"
             >
               Start Uploading
@@ -209,8 +209,8 @@ export default function LandingPage() {
             Lex<span className="text-accent-blue">Redline</span>
           </div>
           <div className="flex gap-8">
-            <Link href="/login" className="hover:text-white transition-colors">Sign In</Link>
-            <Link href="/signup" className="hover:text-white transition-colors">Sign Up</Link>
+            <Link href="/sign-in" className="hover:text-white transition-colors">Sign In</Link>
+            <Link href="/sign-up" className="hover:text-white transition-colors">Sign Up</Link>
             <Link href="#" className="hover:text-white transition-colors">Privacy Policy</Link>
             <Link href="#" className="hover:text-white transition-colors">Terms of Service</Link>
           </div>
