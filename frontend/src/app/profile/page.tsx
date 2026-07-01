@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { Check, Save, Loader2, User } from "lucide-react";
 import preferences from "@/lib/profile_preferences.json";
 
-const INDUSTRIES = ["Legal", "Finance", "Tech", "Healthcare", "Manufacturing", "Other"];
+const INDUSTRIES = ["Legal", "Finance", "Tech", "IT Services", "Products", "Healthcare", "Manufacturing", "Other"];
 const ROLES = ["Reviewer/Signer", "Creator", "Both"];
 
 export default function ProfilePage() {
