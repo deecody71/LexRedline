@@ -22,15 +22,21 @@ export default function Header() {
           <div className="hidden md:flex space-x-6">
             <Link href="/dashboard" className="hover:text-blue-300 transition-colors">Dashboard</Link>
             <Link href="/upload" className="hover:text-blue-300 transition-colors">Upload</Link>
+            <Link href="/profile" className="hover:text-blue-300 transition-colors">Profile</Link>
           </div>
         </div>
         <div className="flex items-center space-x-4">
           {isSignedIn ? (
-            <SignOutButton>
-              <button className="bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded text-xs font-bold transition-colors">
-                Sign Out
-              </button>
-            </SignOutButton>
+            <div className="flex items-center gap-4">
+              <span className="text-sm font-medium text-slate-300">
+                {(user?.publicMetadata as any)?.profile?.screenName || user?.firstName || "User"}
+              </span>
+              <SignOutButton>
+                <button className="bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded text-xs font-bold transition-colors">
+                  Sign Out
+                </button>
+              </SignOutButton>
+            </div>
           ) : (
             <>
               <Link href="/sign-up" className="bg-accent-blue hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-bold transition-colors">Get Started</Link>

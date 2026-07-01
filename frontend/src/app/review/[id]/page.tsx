@@ -20,9 +20,14 @@ export default function ReviewPage() {
   const textContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (isLoaded && !user) {
-      router.push("/sign-up");
-      return;
+    if (isLoaded) {
+      if (!user) {
+        router.push("/sign-up");
+        return;
+      } else if (!(user.publicMetadata as any)?.profile) {
+        router.push("/profile");
+        return;
+      }
     }
 
     // 1. Try context (from fresh upload)
@@ -47,7 +52,7 @@ export default function ReviewPage() {
     }
   }, [id, contextResult, isLoaded, user, router]);
 
-  if (isLoaded || !user) {
+  if (!isLoaded || !user) {
     return (
       <div className="flex items-center justify-center min-h-[calc(100vh-4rem)]">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-accent-blue"></div>

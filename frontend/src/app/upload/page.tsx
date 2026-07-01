@@ -19,8 +19,12 @@ export default function UploadPage() {
   const { setResult } = useAnalysis();
 
   useEffect(() => {
-    if (isLoaded && !user) {
-      router.push("/sign-up");
+    if (isLoaded) {
+      if (!user) {
+        router.push("/sign-up");
+      } else if (!(user.publicMetadata as any)?.profile) {
+        router.push("/profile");
+      }
     }
   }, [user, isLoaded, router]);
 
