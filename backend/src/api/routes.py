@@ -2,14 +2,13 @@
 
 import os
 import uuid
-import tempfile
 from typing import Optional, List
 
-from fastapi import APIRouter, UploadFile, File, HTTPException, Body
+from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Body, Depends
 
 from src.models import (
     Contract, ClauseType, RiskLevel,
-    AnalysisResult, Clause
+    AnalysisResult, Clause, UserProfile
 )
 from src.api.schemas import (
     AnalyzeTextRequest,
@@ -22,31 +21,43 @@ from src.api.schemas import (
     ClauseSchema,
     RiskScoreSchema,
     RedlineSuggestionSchema,
+    ProfileInfo,
+    AnalyzeFileResponse,
 )
-from src.parsers import parse_contract, parse_contract_bytes
+from src.parsers import parse_contract_bytes
 from src.analysis import ContractAnalyzer
 
 router = APIRouter()
 
-# Global analyzer instance (reused across requests)
-analyzer = ContractAnalyzer()
+# Global analyzer instance for non-profile requests
+_default_analyzer = ContractAnalyzer()
 
 # Supported file extensions
 SUPPORTED_EXTENSIONS = {'.pdf', '.docx', '.doc'}
-
-# Maximum upload size: 50MB
 MAX_UPLOAD_SIZE = 50 * 1024 * 1024
 
 
 def _result_to_response(result: AnalysisResult, job_id: str = "") -> AnalysisResultResponse:
-    """Convert an AnalysisResult to the response schema."""
+    """Convert an AnalysisResult to the response schema, including profile info."""
+    meta = result.metadata or {}
+
+    # Extract profile info if it was applied
+    profile_info = None
+    if meta.get("profile_applied"):
+        profile_info = ProfileInfo(
+            applied=True,
+            role=meta.get("profile_role"),
+            preferences=meta.get("profile_preferences", []),
+            modifications=meta.get("profile_modifications", []),
+        )
+
     return AnalysisResultResponse(
         job_id=job_id,
         filename=result.contract.filename,
         file_type=result.contract.file_type,
         page_count=result.contract.page_count,
         sections=_sections_to_schema(result.contract.sections),
-        full_text=result.contract.full_text[:10000],  # Truncate for API responses
+        full_text=result.contract.full_text[:10000],
         clauses=[ClauseSchema(
             clause_type=c.clause_type,
             section_ref=c.section_ref,
@@ -72,8 +83,9 @@ def _result_to_response(result: AnalysisResult, job_id: str = "") -> AnalysisRes
         ) for r in result.redlines],
         clause_count=result.clause_count,
         analysis_time_ms=result.analysis_time_ms,
-        contract_metadata=result.contract.metadata,
+        contract_metadata=result.contract.metadata or {},
         parsed_at=result.contract.parsed_at.isoformat() if result.contract.parsed_at else None,
+        profile=profile_info,
     )
 
 
@@ -100,19 +112,19 @@ async def get_model_info():
     """Get information about the analysis model and supported clause types."""
     clause_types = []
     for ct in ClauseType:
-        if ct == ClauseType.UNKNOWN:
+        if ct in (ClauseType.UNKNOWN, ClauseType.TERMINATION, ClauseType.DISPUTE_RESOLUTION, ClauseType.NON_DISCLOSURE):
             continue
-        keywords = analyzer.detector.CLAUSE_PATTERNS.get(ct, {}).get("keywords", [])
+        keywords = _default_analyzer.detector.CLAUSE_PATTERNS.get(ct, {}).get("keywords", [])
         clause_types.append(ClauseTypeInfo(
             type=ct,
-            description=f"Detection of {ct.value} clauses in contracts",
-            keywords=keywords[:5],  # Top 5 keywords
+            description=f"Detection of {ct.value.replace('_', ' ').title()} clauses",
+            keywords=keywords[:5],
         ))
 
     return ModelInfo(
-        name="LexRedline Clause Detector v1",
-        version="1.0.0",
-        description="Pattern-based clause detection engine for commercial contracts",
+        name="LexRedline Clause Detector v2",
+        version="2.0.0",
+        description="Pattern-based clause detection engine with profile-aware risk analysis",
         supported_clause_types=clause_types,
     )
 
@@ -123,13 +135,20 @@ async def get_model_info():
     responses={400: {"model": ErrorResponse}, 415: {"model": ErrorResponse}, 413: {"model": ErrorResponse}},
     tags=["Analysis"]
 )
-async def analyze_file(file: UploadFile = File(...)):
+async def analyze_file(
+    file: UploadFile = File(...),
+    profile_role: Optional[str] = Form(default=None),
+    profile_preference_ids: Optional[str] = Form(default=None),
+):
     """
     Upload and analyze a contract file (PDF or DOCX).
-
+    
+    Optionally accepts profile data as form fields:
+    - profile_role: 'reviewer', 'creator', or 'both'
+    - profile_preference_ids: comma-separated preference IDs
+    
     Returns detected clauses, risk scores, and redline suggestions.
     """
-    # Validate file extension
     ext = os.path.splitext(file.filename or "")[1].lower()
     if not ext or ext not in SUPPORTED_EXTENSIONS:
         raise HTTPException(
@@ -137,7 +156,6 @@ async def analyze_file(file: UploadFile = File(...)):
             detail=f"Unsupported file format '{ext}'. Supported: {', '.join(SUPPORTED_EXTENSIONS)}"
         )
 
-    # Read file content
     content = await file.read()
     if len(content) > MAX_UPLOAD_SIZE:
         raise HTTPException(
@@ -147,8 +165,15 @@ async def analyze_file(file: UploadFile = File(...)):
 
     job_id = str(uuid.uuid4())[:8]
 
+    # Build profile if provided
+    profile = None
+    if profile_role:
+        pref_ids = [p.strip() for p in (profile_preference_ids or "").split(",") if p.strip()]
+        profile = UserProfile(role=profile_role, preference_ids=pref_ids)
+
     try:
         contract = parse_contract_bytes(content, file.filename or "contract")
+        analyzer = ContractAnalyzer(profile=profile) if profile else _default_analyzer
         result = analyzer.analyze(contract)
         return _result_to_response(result, job_id=job_id)
 
@@ -167,44 +192,29 @@ async def analyze_file(file: UploadFile = File(...)):
 async def analyze_text(request: AnalyzeTextRequest):
     """
     Analyze contract text directly (without file upload).
-
-    Creates a temporary text-based contract and runs full analysis.
+    
+    Accepts optional profile in the JSON body:
+    - profile.role: 'reviewer', 'creator', or 'both'
+    - profile.preference_ids: list of preference IDs
+    
+    Returns full analysis with clauses, risk scores, and redlines.
     """
     job_id = str(uuid.uuid4())[:8]
 
     try:
-        # Build a simple Contract from text
         contract = Contract(
             filename=request.filename,
             file_type="txt",
             full_text=request.text,
-            sections=[],  # Text input has no structured sections by default
             metadata={"source": "direct_text_input"}
         )
 
+        analyzer = ContractAnalyzer(profile=request.profile) if request.profile else _default_analyzer
         result = analyzer.analyze(contract)
         return _result_to_response(result, job_id=job_id)
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
-
-
-@router.get(
-    "/analyze/result/{job_id}",
-    response_model=AnalysisResultResponse,
-    tags=["Analysis"]
-)
-async def get_analysis_result(job_id: str):
-    """
-    Get analysis result by job ID.
-
-    Note: Currently runs analysis on demand. In production, results
-    would be cached or persisted.
-    """
-    raise HTTPException(
-        status_code=501,
-        detail="Result persistence not yet implemented. Use POST /analyze/file instead."
-    )
 
 
 @router.get(
@@ -216,12 +226,29 @@ async def list_clause_types():
     """List all supported clause types and their keywords."""
     clause_types = []
     for ct in ClauseType:
-        if ct == ClauseType.UNKNOWN:
+        if ct in (ClauseType.UNKNOWN, ClauseType.TERMINATION, ClauseType.DISPUTE_RESOLUTION, ClauseType.NON_DISCLOSURE):
             continue
-        keywords = analyzer.detector.CLAUSE_PATTERNS.get(ct, {}).get("keywords", [])
+        keywords = _default_analyzer.detector.CLAUSE_PATTERNS.get(ct, {}).get("keywords", [])
         clause_types.append(ClauseTypeInfo(
             type=ct,
             description=f"Detection of {ct.value.replace('_', ' ').title()} clauses",
             keywords=keywords[:8],
         ))
     return clause_types
+
+
+@router.get(
+    "/profiles",
+    tags=["Information"]
+)
+async def list_available_profiles():
+    """List available profile preferences from the spec."""
+    import json
+    from pathlib import Path
+
+    spec_path = Path("/home/team/shared/profile_preferences.json")
+    if spec_path.exists():
+        with open(spec_path) as f:
+            spec = json.load(f)
+        return {"available_profiles": spec}
+    return {"available_profiles": None}

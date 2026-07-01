@@ -344,6 +344,42 @@ class RiskScorer:
             ))
         return risk_scores
 
+    def apply_modifiers(self, risk_scores: List[RiskScore], clauses: List[Clause],
+                        modifiers: Dict[ClauseType, List[Tuple[str, float, str]]]) -> int:
+        """Apply profile-driven risk modifiers to already-scored clauses.
+        
+        Args:
+            risk_scores: List of RiskScore from score().
+            clauses: Original clauses for text matching.
+            modifiers: Dict mapping ClauseType to list of (pattern, boost, description).
+        
+        Returns:
+            Number of clause types that were modified.
+        """
+        modified_count = 0
+        clause_map = {c.clause_type: c for c in clauses}
+
+        for i, rs in enumerate(risk_scores):
+            rules = modifiers.get(rs.clause_type, [])
+            if not rules:
+                continue
+            clause = clause_map.get(rs.clause_type)
+            if not clause:
+                continue
+
+            for pattern, boost, description in rules:
+                if re.search(pattern, clause.text, re.IGNORECASE):
+                    rs.score = min(1.0, rs.score + boost)
+                    rs.risk_level = self._score_to_level(rs.score)
+                    rs.flags.append(description)
+                    if rs.reasoning:
+                        rs.reasoning += "; " + description
+                    else:
+                        rs.reasoning = description
+                    modified_count += 1
+
+        return modified_count
+
     def _evaluate_clause(self, clause: Clause) -> Tuple[float, str, List[str]]:
         """Evaluate a single clause and return (score, reasoning, flags)."""
         score = 0.3  # Start at low-medium

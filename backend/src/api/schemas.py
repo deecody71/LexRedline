@@ -5,6 +5,7 @@ from pydantic import BaseModel, Field
 from datetime import datetime
 
 from src.models import ClauseType, RiskLevel
+from src.models.profile import UserProfile
 
 
 # --- Request Schemas ---
@@ -13,6 +14,8 @@ class AnalyzeTextRequest(BaseModel):
     """Analyze a contract from raw text."""
     text: str = Field(..., min_length=1, description="Full contract text")
     filename: str = Field(default="contract.txt", description="Original filename for reference")
+    profile: Optional[UserProfile] = Field(default=None, description="User profile preferences")
+    expectations: Optional[str] = Field(default=None, description="Free-text expectations about the contract")
 
 
 class AnalyzeFileResponse(BaseModel):
@@ -23,6 +26,7 @@ class AnalyzeFileResponse(BaseModel):
     page_count: Optional[int] = Field(default=None, description="Number of pages")
     detected_clauses: int = Field(default=0, description="Number of clauses detected")
     status: str = Field(default="processing", description="Analysis status")
+    profile_applied: Optional[str] = Field(default=None, description="Profile role applied")
 
 
 # --- Response Schemas ---
@@ -64,6 +68,24 @@ class RedlineSuggestionSchema(BaseModel):
     priority: RiskLevel
 
 
+class ProfileInfo(BaseModel):
+    """Profile information in analysis response."""
+    applied: bool = Field(default=False, description="Whether a profile was applied")
+    role: Optional[str] = Field(default=None, description="Profile role used")
+    preferences: List[str] = Field(default_factory=list, description="Active preference IDs")
+    modifications: List[str] = Field(default_factory=list, description="What the profile changed")
+
+
+class ExpectationMatchResult(BaseModel):
+    """Expectations matching result."""
+    total_expectations: int = 0
+    matched: List[Dict[str, Any]] = Field(default_factory=list)
+    unmatched: List[Dict[str, Any]] = Field(default_factory=list)
+    match_percentage: float = 100.0
+    matched_types: List[str] = Field(default_factory=list)
+    recommendations: List[str] = Field(default_factory=list)
+
+
 class AnalysisResultResponse(BaseModel):
     """Full analysis result response."""
     job_id: str = Field(default="", description="Analysis job ID")
@@ -81,6 +103,8 @@ class AnalysisResultResponse(BaseModel):
     analysis_time_ms: float
     contract_metadata: Dict[str, Any] = Field(default_factory=dict)
     parsed_at: Optional[str] = None
+    profile: Optional[ProfileInfo] = Field(default=None, description="Profile info if applied")
+    expectation_match: Optional[ExpectationMatchResult] = Field(default=None, description="Expectations matching results")
 
 
 class ErrorResponse(BaseModel):

@@ -10,6 +10,8 @@ from typing import List, Optional, Dict, Any
 from pydantic import BaseModel, Field
 from datetime import datetime
 
+from src.models.profile import UserProfile
+
 
 class ClauseType(str, Enum):
     """Standard clause types found in commercial contracts.
@@ -149,3 +151,4 @@ class AnalysisResult(BaseModel):
     redlines: List[RedlineSuggestion] = Field(default_factory=list, description="Suggested redlines")
     clause_count: int = Field(default=0, description="Number of clauses detected")
     analysis_time_ms: float = Field(default=0.0, description="Time taken for analysis in ms")
+    metadata: Dict[str, Any] = Field(default_factory=dict, description="Additional analysis metadata (profile info, etc.)")
