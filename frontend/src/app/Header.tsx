@@ -29,7 +29,7 @@ export default function Header() {
           {isSignedIn ? (
             <div className="flex items-center gap-4">
               <span className="text-sm font-medium text-slate-300">
-                {(user?.publicMetadata as any)?.profile?.screenName || user?.firstName || "User"}
+                {(user?.publicMetadata as any)?.profile?.screenName || (user?.unsafeMetadata as any)?.profile?.screenName || user?.firstName || "User"}
               </span>
               <SignOutButton>
                 <button className="bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded text-xs font-bold transition-colors">

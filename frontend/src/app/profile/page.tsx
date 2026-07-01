@@ -28,7 +28,7 @@ export default function ProfilePage() {
 
   useEffect(() => {
     if (isLoaded && user) {
-      const profile = (user.publicMetadata as any)?.profile;
+      const profile = (user.unsafeMetadata as any)?.profile;
       if (profile) {
         setFormData({
           firstName: profile.firstName || user.firstName || "",
@@ -59,8 +59,8 @@ export default function ProfilePage() {
 
     try {
       await user.update({
-        publicMetadata: {
-          ...user.publicMetadata,
+        unsafeMetadata: {
+          ...user.unsafeMetadata,
           profile: formData,
         },
       });

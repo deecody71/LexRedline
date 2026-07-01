@@ -22,7 +22,7 @@ export default function UploadPage() {
     if (isLoaded) {
       if (!user) {
         router.push("/sign-up");
-      } else if (!(user.publicMetadata as any)?.profile) {
+      } else if (!(user.publicMetadata as any)?.profile && !(user.unsafeMetadata as any)?.profile) {
         router.push("/profile");
       }
     }
