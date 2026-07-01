@@ -43,12 +43,16 @@ export default function Dashboard() {
   const [contracts, setContracts] = useState<any[]>([]);
 
   useEffect(() => {
-    if (isLoaded && !user) {
-      router.push("/sign-up");
-      return;
+    if (isLoaded) {
+      if (!user) {
+        router.push("/sign-up");
+      } else if (!(user.publicMetadata as any)?.profile) {
+        router.push("/profile");
+      }
     }
 
-    const stored = getStoredContracts();
+    if (isLoaded && user && (user.publicMetadata as any)?.profile) {
+      const stored = getStoredContracts();
     const formattedStored = stored.map(c => ({
       ...c,
       statusIcon: <CheckCircle2 className="w-4 h-4 text-green-500" />

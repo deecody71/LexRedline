@@ -1,0 +1,134 @@
+{
+  "reviewer_preferences": [
+    {
+      "id": "liability_financial",
+      "label": "Liability & Financial Caps",
+      "description": "Focus on protecting against uncapped liability and unfavorable payment terms.",
+      "priority_clauses": ["limitation_of_liability", "liquidated_damages", "payment_terms", "interest_on_late_payments"],
+      "risk_threshold_shift": "Increase sensitivity: Flag any uncapped or one-sided liability as CRITICAL. Mark Net 60+ terms as HIGH risk.",
+      "redline_preference": "Prefer capped liability suggestions and Net 30/45 payment standard language."
+    },
+    {
+      "id": "indemnity_insurance",
+      "label": "Indemnification & Insurance",
+      "description": "Ensure third-party claim protection and adequate insurance coverage.",
+      "priority_clauses": ["indemnification", "insurance_requirements"],
+      "risk_threshold_shift": "More sensitive to unilateral indemnity. Flag missing 'notice and control of defense' as MEDIUM risk.",
+      "redline_preference": "Prefer mutual IP infringement indemnity templates."
+    },
+    {
+      "id": "ip_ownership",
+      "label": "Intellectual Property Rights",
+      "description": "Prioritize ownership of deliverables and retention of background IP.",
+      "priority_clauses": ["intellectual_property_ownership"],
+      "risk_threshold_shift": "Flag 'Vendor owns everything' as CRITICAL. Flag 'Joint ownership' as HIGH risk.",
+      "redline_preference": "Prefer 'Work Made for Hire' and assignment to customer templates."
+    },
+    {
+      "id": "data_privacy",
+      "label": "Data Privacy & Security",
+      "description": "Ensure GDPR/CCPA compliance and data breach notification obligations.",
+      "priority_clauses": ["data_protection_gdpr"],
+      "risk_threshold_shift": "Flag missing DPA or missing 72-hour notification as CRITICAL.",
+      "redline_preference": "Prefer standard GDPR-compliant notification and usage restriction templates."
+    },
+    {
+      "id": "exit_rights",
+      "label": "Termination & Exit Rights",
+      "description": "Focus on termination for convenience and refund of pre-paid fees.",
+      "priority_clauses": ["termination_for_convenience", "termination_for_cause", "survival"],
+      "risk_threshold_shift": "Flag 'Unilateral Vendor-only termination' as HIGH. Flag missing 'pro-rata refund' as MEDIUM.",
+      "redline_preference": "Prefer mutual termination for convenience and pro-rata refund templates."
+    },
+    {
+      "id": "restrictive_covenants",
+      "label": "Non-Compete & Exclusivity",
+      "description": "Watch for broad restrictions on business operations.",
+      "priority_clauses": ["non_compete", "non_solicit", "exclusivity"],
+      "risk_threshold_shift": "Flag 12+ month post-term non-compete as CRITICAL. Flag broad exclusivity without minimums as HIGH.",
+      "redline_preference": "Prefer 6-month limited non-compete and narrow exclusivity templates."
+    },
+    {
+      "id": "legal_governance",
+      "label": "Governing Law & Disputes",
+      "description": "Ensure favorable or neutral law and dispute resolution venues.",
+      "priority_clauses": ["governing_law", "dispute_resolution_arbitration"],
+      "risk_threshold_shift": "Flag foreign jurisdictions as CRITICAL. Flag unfavorable hubs (e.g. Alabama) as HIGH.",
+      "redline_preference": "Prefer Delaware/New York governing law templates."
+    },
+    {
+      "id": "business_continuity",
+      "label": "Assignment & M&A Protection",
+      "description": "Protect the right to assign the contract during merger or acquisition.",
+      "priority_clauses": ["assignment", "force_majeure", "order_of_precedence"],
+      "risk_threshold_shift": "Flag absolute assignment prohibitions (even for M&A) as HIGH risk.",
+      "redline_preference": "Prefer 'Permitted for M&A/Sale of Assets' assignment templates."
+    }
+  ],
+  "creator_preferences": [
+    {
+      "id": "aggressive_provisions",
+      "label": "One-Sided/Aggressive Terms",
+      "description": "Flag language that is significantly out of market or overly punitive.",
+      "priority_clauses": ["indemnification", "limitation_of_liability", "liquidated_damages", "interest_on_late_payments"],
+      "risk_threshold_shift": "Flag any 'sole discretion' or 'absolute performance' language as HIGH. Flag usurious interest rates.",
+      "redline_preference": "Prefer 'Balanced' and 'Market Standard' mutual language."
+    },
+    {
+      "id": "missing_protective_boilerplate",
+      "label": "Missing Protective Boilerplate",
+      "description": "Ensure the contract includes standard legal protections.",
+      "priority_clauses": ["severability", "waiver", "entire_agreement", "notice", "compliance_with_laws"],
+      "risk_threshold_shift": "Flag missing integration (entire agreement) or severability as MEDIUM risk.",
+      "redline_preference": "Suggest adding standard ABA/Market integration and non-waiver clauses."
+    },
+    {
+      "id": "market_deviation",
+      "label": "Market Deviation",
+      "description": "Identify terms that deviate from standard commercial practices.",
+      "priority_clauses": ["payment_terms", "confidentiality", "governing_law"],
+      "risk_threshold_shift": "Flag deviations from Net 30/45 or 3-5 year confidentiality survival as MEDIUM.",
+      "redline_preference": "Prefer templates aligned with 'Practical Law' or 'IACCM' market standards."
+    },
+    {
+      "id": "negotiation_friction",
+      "label": "Negotiation Bottlenecks",
+      "description": "Identify clauses that typically lead to prolonged negotiation.",
+      "priority_clauses": ["non_compete", "exclusivity", "audit_rights", "publicity"],
+      "risk_threshold_shift": "Flag broad audit rights (no notice/unlimited) as HIGH. Flag broad publicity rights.",
+      "redline_preference": "Suggest limited, consent-based publicity and audit rights."
+    },
+    {
+      "id": "clarity_scope",
+      "label": "Ambiguous Deliverables/Scope",
+      "description": "Flag items where obligations are not clearly defined.",
+      "priority_clauses": ["deliverables", "order_of_precedence"],
+      "risk_threshold_shift": "Flag circular or ambiguous precedence as MEDIUM. Flag undefined deliverables.",
+      "redline_preference": "Prefer templates that establish clear hierarchy and reference specific SOWs."
+    },
+    {
+      "id": "overbroad_covenants",
+      "label": "Overbroad Covenants",
+      "description": "Flag covenants that are too broad in geography or duration.",
+      "priority_clauses": ["non_compete", "non_solicit"],
+      "risk_threshold_shift": "Flag 'Global' or 'Indefinite' restrictions as HIGH.",
+      "redline_preference": "Prefer narrowly tailored duration and geographic scope templates."
+    },
+    {
+      "id": "compliance_audit_gaps",
+      "label": "Compliance & Audit Gaps",
+      "description": "Check for missing regulatory compliance or unfair audit cost-shifting.",
+      "priority_clauses": ["compliance_with_laws", "audit_rights"],
+      "risk_threshold_shift": "Flag unilateral compliance or 'Auditee always pays' as MEDIUM risk.",
+      "redline_preference": "Prefer mutual compliance and 'Auditee pays only for discrepancy' templates."
+    },
+    {
+      "id": "document_consistency",
+      "label": "Inconsistent Hierarchy",
+      "description": "Ensure the relationship between main agreement and attachments is clear.",
+      "priority_clauses": ["order_of_precedence", "entire_agreement"],
+      "risk_threshold_shift": "Flag lack of clear hierarchy between master agreement and SOW as MEDIUM.",
+      "redline_preference": "Prefer standard 'Master Agreement controls legal terms' hierarchy."
+    }
+  ]
+}
