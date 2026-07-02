@@ -199,6 +199,58 @@ export default function ReviewPage() {
           <p className="text-xs text-slate-500">Detected {result.redlines.length} items requiring review</p>
         </div>
 
+        {/* Expectation Match Section */}
+        {result.expectation_match && (
+          <div className="p-4 border-b border-slate-200 bg-white">
+            <h3 className="text-sm font-bold text-navy mb-3 flex items-center gap-2">
+              <CheckCircle className="w-4 h-4 text-green-500" />
+              Expectation Match
+            </h3>
+            <div className="flex items-center gap-3 mb-3">
+              <div className={`text-2xl font-bold ${
+                result.expectation_match.match_percentage >= 80 ? 'text-green-600' :
+                result.expectation_match.match_percentage >= 50 ? 'text-amber-600' :
+                'text-red-600'
+              }`}>
+                {Math.round(result.expectation_match.match_percentage)}%
+              </div>
+              <div className="text-xs text-slate-500">
+                of expectations met
+              </div>
+            </div>
+            {result.expectation_match.matched.length > 0 && (
+              <div className="mb-2">
+                <p className="text-xs font-semibold text-green-700 mb-1">✅ Met ({result.expectation_match.matched.length})</p>
+                <ul className="text-xs text-slate-600 space-y-0.5">
+                  {result.expectation_match.matched.map((m: any, i: number) => (
+                    <li key={i} className="truncate">{m.expectation}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {result.expectation_match.unmatched.length > 0 && (
+              <div className="mb-2">
+                <p className="text-xs font-semibold text-red-700 mb-1">❌ Missing ({result.expectation_match.unmatched.length})</p>
+                <ul className="text-xs text-slate-600 space-y-0.5">
+                  {result.expectation_match.unmatched.map((u: any, i: number) => (
+                    <li key={i} className="truncate">{u.expectation}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {result.expectation_match.recommendations.length > 0 && (
+              <div className="mt-2 p-2 bg-amber-50 border border-amber-200 rounded text-xs text-amber-800">
+                <p className="font-semibold mb-0.5">Recommendations:</p>
+                <ul className="list-disc list-inside space-y-0.5">
+                  {result.expectation_match.recommendations.map((r: string, i: number) => (
+                    <li key={i}>{r}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        )}
+
         <div className="divide-y divide-slate-100">
           {result.redlines.map((item: any, index: number) => {
             const isAccepted = acceptedRedlines.has(index);

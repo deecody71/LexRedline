@@ -12,6 +12,7 @@ export default function UploadPage() {
   const { user, isLoaded } = useUser();
   const [file, setFile] = useState<File | null>(null);
   const [contractName, setContractName] = useState("");
+  const [expectations, setExpectations] = useState("");
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
@@ -52,7 +53,7 @@ export default function UploadPage() {
     setError(null);
     
     try {
-      const result = await analyzeFile(file);
+      const result = await analyzeFile(file, expectations);
       saveAnalysisResult(contractName || file.name, result);
       setResult(result);
       router.push(`/review/${result.job_id}`);
@@ -92,6 +93,22 @@ export default function UploadPage() {
             placeholder="e.g. Master Services Agreement - Acme Corp"
             className="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-accent-blue focus:border-transparent outline-none transition-all"
           />
+        </div>
+
+        <div className="mb-6">
+          <label className="block text-sm font-medium text-slate-700 mb-2">
+            Contract Expectations <span className="text-slate-400 font-normal">(optional)</span>
+          </label>
+          <textarea
+            value={expectations}
+            onChange={(e) => setExpectations(e.target.value)}
+            placeholder={"Describe what you expect from this contract, e.g.:\n• I need 30-day termination for convenience\n• Liability cap should be at least $1M\n• Must include data privacy protections\n• No non-compete clause"}
+            rows={5}
+            className="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-accent-blue focus:border-transparent outline-none transition-all resize-y text-sm"
+          />
+          <p className="mt-1 text-xs text-slate-400">
+            We'll analyze how well the contract matches your stated requirements.
+          </p>
         </div>
 
         <div
