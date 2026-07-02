@@ -1,5 +1,14 @@
 const API_BASE_URL = '/api/v1';
 
+export interface ExpectationMatchResult {
+  total_expectations: number;
+  matched: Array<{ expectation: string; matched_clauses: string[]; explanation: string }>;
+  unmatched: Array<{ expectation: string; suggestion: string }>;
+  match_percentage: number;
+  matched_types: string[];
+  recommendations: string[];
+}
+
 export interface AnalysisResult {
   job_id: string;
   filename: string;
@@ -16,6 +25,7 @@ export interface AnalysisResult {
   analysis_time_ms: number;
   contract_metadata: Record<string, any>;
   parsed_at: string | null;
+  expectation_match?: ExpectationMatchResult;
 }
 
 export interface Section {
@@ -51,9 +61,13 @@ export interface RedlineSuggestion {
   priority: number;
 }
 
-export async function analyzeFile(file: File): Promise<AnalysisResult> {
+export async function analyzeFile(file: File, expectations?: string): Promise<AnalysisResult> {
   const formData = new FormData();
   formData.append('file', file);
+  
+  if (expectations && expectations.trim()) {
+    formData.append('expectations', expectations.trim());
+  }
 
   const response = await fetch(`${API_BASE_URL}/analyze/file`, {
     method: 'POST',
