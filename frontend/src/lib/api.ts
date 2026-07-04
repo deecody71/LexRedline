@@ -1,14 +1,5 @@
 const API_BASE_URL = '/api/v1';
 
-export interface ExpectationMatchResult {
-  total_expectations: number;
-  matched: Array<{ expectation: string; matched_clauses: string[]; explanation: string }>;
-  unmatched: Array<{ expectation: string; suggestion: string }>;
-  match_percentage: number;
-  matched_types: string[];
-  recommendations: string[];
-}
-
 export interface AnalysisResult {
   job_id: string;
   filename: string;
@@ -26,6 +17,23 @@ export interface AnalysisResult {
   contract_metadata: Record<string, any>;
   parsed_at: string | null;
   expectation_match?: ExpectationMatchResult;
+  profile?: ProfileInfo | null;
+}
+
+export interface ProfileInfo {
+  applied: boolean;
+  role: string | null;
+  preferences: string[];
+  modifications: string[];
+}
+
+export interface ExpectationMatchResult {
+  total_expectations: number;
+  matched: Array<{ keyword: string; phrase: string; status: string; expected_types: string[] }>;
+  unmatched: Array<{ keyword: string; phrase: string; status: string; expected_types: string[] }>;
+  match_percentage: number;
+  matched_types: string[];
+  recommendations: string[];
 }
 
 export interface Section {
@@ -61,15 +69,49 @@ export interface RedlineSuggestion {
   priority: number;
 }
 
-export async function analyzeFile(file: File, expectations?: string): Promise<AnalysisResult> {
+export interface UserProfile {
+  role: 'reviewer' | 'creator' | 'both';
+  preference_ids: string[];
+  custom_preferences?: string;
+}
+
+export interface ContractSummary {
+  id: string;
+  filename: string;
+  created_at: string;
+}
+
+
+async function getAuthToken(): Promise<string | null> {
+  try {
+    if (typeof window !== 'undefined' && (window as any).Clerk?.session) {
+      return await (window as any).Clerk.session.getToken();
+    }
+  } catch {}
+  return null;
+}
+
+async function authFetch(url: string, options: RequestInit = {}): Promise<Response> {
+  const token = await getAuthToken();
+  const headers = new Headers(options.headers || {});
+  if (token) {
+    headers.set('Authorization', `Bearer ${token}`);
+  }
+  return fetch(url, { ...options, headers });
+}
+
+export async function analyzeFile(
+  file: File,
+  expectations?: string
+): Promise<AnalysisResult> {
   const formData = new FormData();
   formData.append('file', file);
-  
+
   if (expectations && expectations.trim()) {
     formData.append('expectations', expectations.trim());
   }
 
-  const response = await fetch(`${API_BASE_URL}/analyze/file`, {
+  const response = await authFetch(`${API_BASE_URL}/analyze/file`, {
     method: 'POST',
     body: formData,
   });
@@ -82,6 +124,26 @@ export async function analyzeFile(file: File, expectations?: string): Promise<An
   return response.json();
 }
 
+export async function analyzeText(
+  text: string,
+  filename: string = 'contract.txt',
+  expectations?: string,
+  profile?: UserProfile
+): Promise<AnalysisResult> {
+  const response = await authFetch(`${API_BASE_URL}/analyze/text`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text, filename, expectations, profile }),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({ detail: 'Unknown error' }));
+    throw new Error(errorData.detail || `Analysis failed with status ${response.status}`);
+  }
+
+  return response.json();
+}
+
 export async function getHealth(): Promise<{ status: string }> {
   const response = await fetch(`${API_BASE_URL}/health`);
   return response.json();
@@ -89,5 +151,28 @@ export async function getHealth(): Promise<{ status: string }> {
 
 export async function listClauseTypes(): Promise<any[]> {
   const response = await fetch(`${API_BASE_URL}/clauses`);
+  return response.json();
+}
+
+export async function getAvailableProfiles(): Promise<any> {
+  const response = await fetch(`${API_BASE_URL}/profiles`);
+  return response.json();
+}
+
+export async function getUserContracts(): Promise<ContractSummary[]> {
+  const response = await authFetch(`${API_BASE_URL}/contracts`);
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({ detail: 'Unknown error' }));
+    throw new Error(errorData.detail || `Failed to fetch contracts: ${response.status}`);
+  }
+  return response.json();
+}
+
+export async function getContract(id: string): Promise<AnalysisResult> {
+  const response = await authFetch(`${API_BASE_URL}/contracts/${id}`);
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({ detail: 'Unknown error' }));
+    throw new Error(errorData.detail || `Failed to fetch contract: ${response.status}`);
+  }
   return response.json();
 }
