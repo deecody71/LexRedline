@@ -46,12 +46,12 @@ export default function Dashboard() {
     if (isLoaded) {
       if (!user) {
         router.push("/sign-up");
-      } else if (!(user.publicMetadata as any)?.profile) {
+      } else if (!(user.unsafeMetadata as any)?.profile) {
         router.push("/profile");
       }
     }
 
-    if (isLoaded && user && (user.publicMetadata as any)?.profile) {
+    if (isLoaded && user && (user.unsafeMetadata as any)?.profile) {
       const stored = getStoredContracts();
       const formattedStored = stored.map(c => ({
         ...c,

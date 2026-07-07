@@ -59,8 +59,8 @@ export default function ProfilePage() {
 
     try {
       await user.update({
-        publicMetadata: {
-          ...user.publicMetadata,
+        unsafeMetadata: {
+          ...user.unsafeMetadata,
           profile: formData,
         },
       });
