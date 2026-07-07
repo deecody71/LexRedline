@@ -33,8 +33,11 @@ from src.storage import save_contract, get_user_contracts, get_contract, init_db
 
 router = APIRouter()
 
-# Initialize database on module load
-init_db()
+# Initialize database on module load (gracefully skip if team-db not available)
+try:
+    init_db()
+except Exception as e:
+    print(f"Warning: Database initialization skipped ({e})")
 
 # Global analyzer instance for non-profile requests
 _default_analyzer = ContractAnalyzer()

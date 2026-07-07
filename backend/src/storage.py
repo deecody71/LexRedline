@@ -1,17 +1,39 @@
 """Database storage for user contracts using team-db CLI."""
 
 import json
+import os
 import uuid
 import subprocess
 from typing import Optional, List, Dict, Any
 from datetime import datetime, timezone
 
 
-TEAM_DB_CMD = "/home/agent-ai-ml-engineer/.local/bin/team-db"
+TEAM_DB_CMD = os.environ.get(
+    "TEAM_DB_CMD",
+    "/home/agent-ai-ml-engineer/.local/bin/team-db"
+)
+
+# Flag to track if team-db is available
+_team_db_available: Optional[bool] = None
+
+
+def _check_team_db() -> bool:
+    """Check if the team-db CLI is available."""
+    global _team_db_available
+    if _team_db_available is not None:
+        return _team_db_available
+    try:
+        subprocess.run([TEAM_DB_CMD, "--help"], capture_output=True, timeout=5)
+        _team_db_available = True
+    except (FileNotFoundError, subprocess.TimeoutExpired, OSError):
+        _team_db_available = False
+    return _team_db_available
 
 
 def _run_sql(sql: str) -> List[Dict[str, Any]]:
     """Execute SQL via team-db CLI and return parsed JSON results."""
+    if not _check_team_db():
+        return []
     try:
         result = subprocess.run(
             [TEAM_DB_CMD, sql],
@@ -20,17 +42,23 @@ def _run_sql(sql: str) -> List[Dict[str, Any]]:
             timeout=30,
         )
         if result.returncode != 0:
-            raise RuntimeError(f"team-db error: {result.stderr.strip()}")
+            print(f"team-db error: {result.stderr.strip()}")
+            return []
         output = result.stdout.strip()
         if output:
             return json.loads(output)
         return []
     except FileNotFoundError:
-        raise RuntimeError(f"team-db CLI not found at {TEAM_DB_CMD}")
+        print(f"team-db CLI not found at {TEAM_DB_CMD}")
+        return []
     except json.JSONDecodeError:
         return []
     except subprocess.TimeoutExpired:
-        raise RuntimeError("team-db query timed out")
+        print("team-db query timed out")
+        return []
+    except Exception as e:
+        print(f"team-db error: {e}")
+        return []
 
 
 def init_db():
