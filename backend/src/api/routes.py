@@ -2,9 +2,10 @@
 
 import os
 import uuid
-from typing import Optional, List
+import json as json_module
+from typing import Optional, List, Dict
 
-from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Body, Depends
+from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Depends
 
 from src.models import (
     Contract, ClauseType, RiskLevel,
@@ -22,12 +23,18 @@ from src.api.schemas import (
     RiskScoreSchema,
     RedlineSuggestionSchema,
     ProfileInfo,
+    ExpectationMatchResult,
     AnalyzeFileResponse,
 )
 from src.parsers import parse_contract_bytes
 from src.analysis import ContractAnalyzer
+from src.auth import get_current_user, get_optional_user
+from src.storage import save_contract, get_user_contracts, get_contract, init_db
 
 router = APIRouter()
+
+# Initialize database on module load
+init_db()
 
 # Global analyzer instance for non-profile requests
 _default_analyzer = ContractAnalyzer()
@@ -49,6 +56,19 @@ def _result_to_response(result: AnalysisResult, job_id: str = "") -> AnalysisRes
             role=meta.get("profile_role"),
             preferences=meta.get("profile_preferences", []),
             modifications=meta.get("profile_modifications", []),
+        )
+
+    # Extract expectation match if present
+    expectation_match = None
+    em = meta.get("expectation_match")
+    if em:
+        expectation_match = ExpectationMatchResult(
+            total_expectations=em.get("total", 0),
+            matched=em.get("matched", []),
+            unmatched=em.get("unmatched", []),
+            match_percentage=em.get("match_pct", 100.0),
+            matched_types=em.get("matched_types", []),
+            recommendations=em.get("recommendations", []),
         )
 
     return AnalysisResultResponse(
@@ -86,6 +106,7 @@ def _result_to_response(result: AnalysisResult, job_id: str = "") -> AnalysisRes
         contract_metadata=result.contract.metadata or {},
         parsed_at=result.contract.parsed_at.isoformat() if result.contract.parsed_at else None,
         profile=profile_info,
+        expectation_match=expectation_match,
     )
 
 
@@ -139,15 +160,19 @@ async def analyze_file(
     file: UploadFile = File(...),
     profile_role: Optional[str] = Form(default=None),
     profile_preference_ids: Optional[str] = Form(default=None),
+    expectations: Optional[str] = Form(default=None),
+    user_id: str = Depends(get_optional_user),
 ):
     """
     Upload and analyze a contract file (PDF or DOCX).
     
-    Optionally accepts profile data as form fields:
-    - profile_role: 'reviewer', 'creator', or 'both'
-    - profile_preference_ids: comma-separated preference IDs
+    Optionally accepts:
+    - profile data: profile_role, profile_preference_ids
+    - expectations: free-form text describing what the user expects in the contract
     
-    Returns detected clauses, risk scores, and redline suggestions.
+    If an Authorization header with a valid Clerk JWT is provided,
+    the result is saved to the user's contract history.
+    Returns detected clauses, risk scores, redline suggestions, and expectation match.
     """
     ext = os.path.splitext(file.filename or "")[1].lower()
     if not ext or ext not in SUPPORTED_EXTENSIONS:
@@ -174,8 +199,15 @@ async def analyze_file(
     try:
         contract = parse_contract_bytes(content, file.filename or "contract")
         analyzer = ContractAnalyzer(profile=profile) if profile else _default_analyzer
-        result = analyzer.analyze(contract)
-        return _result_to_response(result, job_id=job_id)
+        result = analyzer.analyze(contract, expectations=expectations)
+        response = _result_to_response(result, job_id=job_id)
+
+        # Save to DB if authenticated
+        if user_id and user_id != "anonymous":
+            result_dict = response.model_dump()
+            save_contract(user_id, file.filename or "contract", result_dict)
+
+        return response
 
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -189,15 +221,20 @@ async def analyze_file(
     responses={400: {"model": ErrorResponse}},
     tags=["Analysis"]
 )
-async def analyze_text(request: AnalyzeTextRequest):
+async def analyze_text(
+    request: AnalyzeTextRequest,
+    user_id: str = Depends(get_optional_user),
+):
     """
     Analyze contract text directly (without file upload).
     
-    Accepts optional profile in the JSON body:
-    - profile.role: 'reviewer', 'creator', or 'both'
-    - profile.preference_ids: list of preference IDs
+    Accepts optional:
+    - profile in the JSON body
+    - expectations: free-form text describing what the user expects
     
-    Returns full analysis with clauses, risk scores, and redlines.
+    If an Authorization header with a valid Clerk JWT is provided,
+    the result is saved to the user's contract history.
+    Returns full analysis with clauses, risk scores, redlines, and expectation match.
     """
     job_id = str(uuid.uuid4())[:8]
 
@@ -210,11 +247,65 @@ async def analyze_text(request: AnalyzeTextRequest):
         )
 
         analyzer = ContractAnalyzer(profile=request.profile) if request.profile else _default_analyzer
-        result = analyzer.analyze(contract)
-        return _result_to_response(result, job_id=job_id)
+        result = analyzer.analyze(contract, expectations=request.expectations)
+        response = _result_to_response(result, job_id=job_id)
+
+        # Save to DB if authenticated
+        if user_id and user_id != "anonymous":
+            result_dict = response.model_dump()
+            save_contract(user_id, request.filename, result_dict)
+
+        return response
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
+
+
+@router.get(
+    "/contracts",
+    response_model=List[Dict],
+    tags=["Storage"]
+)
+async def list_user_contracts(user_id: str = Depends(get_current_user)):
+    """
+    List all contracts for the authenticated user.
+    
+    Returns summary info (id, filename, created_at) for each contract.
+    Requires authentication.
+    """
+    if user_id == "anonymous":
+        raise HTTPException(status_code=401, detail="Authentication required.")
+
+    contracts = get_user_contracts(user_id)
+    return contracts
+
+
+@router.get(
+    "/contracts/{contract_id}",
+    response_model=Dict,
+    tags=["Storage"]
+)
+async def get_contract_by_id(
+    contract_id: str,
+    user_id: str = Depends(get_current_user),
+):
+    """
+    Get a specific contract by ID (with ownership verification).
+    
+    Returns the full analysis result including clauses, risk scores, and redlines.
+    Only accessible by the contract owner.
+    """
+    if user_id == "anonymous":
+        raise HTTPException(status_code=401, detail="Authentication required.")
+
+    contract = get_contract(contract_id, user_id)
+    if contract is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Contract not found or access denied.",
+        )
+
+    return contract
 
 
 @router.get(
