@@ -53,11 +53,12 @@ export default function Dashboard() {
 
     if (isLoaded && user && (user.publicMetadata as any)?.profile) {
       const stored = getStoredContracts();
-    const formattedStored = stored.map(c => ({
-      ...c,
-      statusIcon: <CheckCircle2 className="w-4 h-4 text-green-500" />
-    }));
-    setContracts([...formattedStored, ...sampleContracts]);
+      const formattedStored = stored.map(c => ({
+        ...c,
+        statusIcon: <CheckCircle2 className="w-4 h-4 text-green-500" />
+      }));
+      setContracts([...formattedStored, ...sampleContracts]);
+    }
   }, [user, isLoaded, router]);
 
   if (!isLoaded) {
