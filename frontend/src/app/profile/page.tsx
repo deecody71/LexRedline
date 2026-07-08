@@ -30,7 +30,7 @@ export default function ProfilePage() {
     if (isLoaded && user) {
       const profile = (user.unsafeMetadata as any)?.profile || JSON.parse(localStorage.getItem("lexredline_profile_data") || "null");
       if (profile) {
-        setFormData({...
+        setFormData({
           firstName: profile.firstName || user.firstName || "",
           lastName: profile.lastName || user.lastName || "",
           screenName: profile.screenName || "",
