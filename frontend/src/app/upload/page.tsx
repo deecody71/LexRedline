@@ -117,13 +117,14 @@ export default function UploadPage() {
               ? "border-accent-blue bg-blue-50"
               : "border-slate-300 hover:border-slate-400 bg-slate-50"
           }`}
-        >
-          <input
-            type="file"
-            onChange={handleFileChange}
-            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-            accept=".pdf,.doc,.docx"
-          />
+         {!file && (
+            <input
+              type="file"
+              onChange={handleFileChange}
+              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+              accept=".pdf,.doc,.docx"
+            />
+          )}
           
           {file ? (
             <div className="flex flex-col items-center">
