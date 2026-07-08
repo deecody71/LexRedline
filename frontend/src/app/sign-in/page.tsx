@@ -9,7 +9,7 @@ export default function SignInPage() {
           <p className="text-slate-500 mt-2">Sign in to LexRedline to review your contracts</p>
         </div>
         <div className="bg-white p-8 rounded-xl shadow-sm border border-slate-200">
-          <SignIn afterSignInUrl="/dashboard" />
+          <SignIn />
         </div>
       </div>
     </div>
