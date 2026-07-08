@@ -60,7 +60,7 @@ export default function ProfilePage() {
     try {
       await user.update({
         unsafeMetadata: {
-          ...user.unsafeMetadata,
+          ...(user.unsafeMetadata || {}),
           profile: formData,
         },
       });
@@ -68,7 +68,7 @@ export default function ProfilePage() {
       setTimeout(() => setIsSaveSuccess(false), 3000);
       
       // If this was onboarding, they can now go to dashboard
-      // router.push("/dashboard");
+      router.push("/dashboard"), 1500);
     } catch (err) {
       console.error("Failed to save profile:", err);
       alert("Failed to save profile. Please try again.");
