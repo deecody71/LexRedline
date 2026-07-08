@@ -64,13 +64,11 @@ export default function ProfilePage() {
           profile: formData,
         },
       });
-      setIsSaveSuccess(true);
+        await user.reload();
+       setIsSaveSuccess(true);
 
-      //Redirect to dashboard after saving
-      setTimeout(() => setIsSaveSuccess(false), 3000);
-      
-      // If this was onboarding, they can now go to dashboard
-       setTimeout(() => router.push("/dashboard"), 1500);
+      // Redirect to dashboard after saving
+      setTimeout(() => router.push("/dashboard"), 1500);
     } catch (err) {
       console.error("Failed to save profile:", err);
       alert("Failed to save profile. Please try again.");
@@ -100,7 +98,7 @@ export default function ProfilePage() {
   }
 
   if (!user) {
-    router.push("/signup");
+    router.push("/sign-up");
     return null;
   }
 
