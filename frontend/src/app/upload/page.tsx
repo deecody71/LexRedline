@@ -117,7 +117,8 @@ export default function UploadPage() {
               ? "border-accent-blue bg-blue-50"
               : "border-slate-300 hover:border-slate-400 bg-slate-50"
           }`}
-         {!file && (
+        >
+          {!file && (
             <input
               type="file"
               onChange={handleFileChange}
