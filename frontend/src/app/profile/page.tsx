@@ -28,9 +28,9 @@ export default function ProfilePage() {
 
   useEffect(() => {
     if (isLoaded && user) {
-      const profile = (user.publicMetadata as any)?.profile;
+      const profile = (user.unsafeMetadata as any)?.profile || JSON.parse(localStorage.getItem("lexredline_profile_data") || "null");
       if (profile) {
-        setFormData({
+        setFormData({...
           firstName: profile.firstName || user.firstName || "",
           lastName: profile.lastName || user.lastName || "",
           screenName: profile.screenName || "",
@@ -66,6 +66,7 @@ export default function ProfilePage() {
       });
         await user.reload();
       localStorage.setItem("lexredline_profile_complete", "true");
+      localStorage.setItem("lexredline_profile_data", JSON.stringify(formData));
       setIsSaveSuccess(true);
 
       // Redirect to dashboard after saving
