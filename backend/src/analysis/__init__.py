@@ -31,8 +31,7 @@ class ContractAnalyzer:
         overall_risk, overall_score = self.scorer.compute_overall_risk(clauses, risk_scores)
 
         # Step 3: Generate redlines
-        redlines = self.generator.generate(clauses, risk_scores)
-
+        redlines = self.generator.suggest(clauses, risk_scores)
         # Step 4: Match expectations
         expectation_match = None
         if expectations:
