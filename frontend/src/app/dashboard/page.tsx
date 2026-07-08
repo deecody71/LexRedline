@@ -46,12 +46,12 @@ export default function Dashboard() {
     if (isLoaded) {
       if (!user) {
         router.push("/sign-up");
-      } else if (!(user.unsafeMetadata as any)?.profile) {
+       } else if (!(user.unsafeMetadata as any)?.profile && !localStorage.getItem("lexredline_profile_complete")) {
         router.push("/profile");
       }
     }
 
-    if (isLoaded && user && (user.unsafeMetadata as any)?.profile) {
+    if (isLoaded && user && ((user.unsafeMetadata as any)?.profile || localStorage.getItem("lexredline_profile_complete"))) {
       const stored = getStoredContracts();
       const formattedStored = stored.map(c => ({
         ...c,
