@@ -23,7 +23,7 @@ export default function UploadPage() {
     if (isLoaded) {
       if (!user) {
         router.push("/sign-up");
-      } else if (!(user.publicMetadata as any)?.profile) {
+      } else if (!(user.unsafeMetadata as any)?.profile && !localStorage.getItem("lexredline_profile_complete")) {
         router.push("/profile");
       }
     }
