@@ -27,48 +27,34 @@ class ContractAnalyzer:
     def analyze(self, contract: Contract, expectations: Optional[str] = None) -> AnalysisResult:
         """
         Run the full analysis pipeline on a parsed contract.
-
-        Args:
-            contract: Parsed Contract object.
-            expectations: Optional free-form text describing user's expectations.
-
-        Returns:
-            Complete AnalysisResult with clauses, risk scores, redlines, and profile info.
         """
         start_time = time.time()
         profile_modifications: List[str] = []
 
-        # Step 1: Detect clauses (preferences can influence priorities)
-        profile_priorities = self.preferences.get_priority_clauses()
-        clauses = self.detector.detect(contract, priorities=profile_priorities)
-        if profile_priorities:
-            profile_modifications.append(f"Prioritized clauses: {', '.join(profile_priorities)}")
+        # Step 1: Detect clauses
+        clauses = self.detector.detect(contract)
+        if self.preferences.get_priority_clauses():
+            profile_modifications.append(f"Prioritized clauses: {', '.join(self.preferences.get_priority_clauses())}")
 
-        # Step 2: Score risks (preferences can adjust thresholds)
+        # Step 2: Score risks
         risk_scores = self.scorer.score(clauses, preference_engine=self.preferences)
         overall_risk, overall_score = self.scorer.calculate_overall(risk_scores)
-        pref_adjustments = self.preferences.get_threshold_adjustments()
-        if pref_adjustments:
-            profile_modifications.append(f"Adjusted risk thresholds: {pref_adjustments}")
 
-        # Step 2.5: Match expectations against detected clauses
+        # Step 2.5: Match expectations
         expectation_match = None
         if expectations:
             matcher = ExpectationMatcher()
             expectation_match = matcher.analyze(expectations, clauses)
 
-        # Step 3: Generate redlines (preferences can influence suggestions)
-        selected_redlines = self.preferences.select_redlines(risk_scores, self.generator)
+        # Step 3: Generate redlines
         if self.preferences.profile and self.preferences.profile.is_active:
-            redlines = selected_redlines
+            redlines = self.preferences.select_redlines(risk_scores, self.generator)
             profile_modifications.append(f"Applied profile: {self.preferences.profile.role or 'custom'}")
         else:
             redlines = self.generator.generate(clauses, risk_scores)
 
-        # Step 4: Apply profile-driven risk modifiers
+        # Step 4: Apply risk modifiers
         risk_scores = self.scorer.apply_modifiers(risk_scores, self.preferences)
-
-        # Recalculate overall after modifiers
         overall_risk, overall_score = self.scorer.calculate_overall(risk_scores)
 
         # Build result
