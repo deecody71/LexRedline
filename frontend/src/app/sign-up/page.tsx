@@ -9,7 +9,7 @@ export default function SignUpPage() {
           <p className="text-slate-500 mt-2">Sign up with Google or email to get started</p>
         </div>
         <div className="bg-white p-8 rounded-xl shadow-sm border border-slate-200">
-          <SignUp />
+          <SignUp afterSignUpUrl="/dashboard" />
         </div>
       </div>
     </div>
