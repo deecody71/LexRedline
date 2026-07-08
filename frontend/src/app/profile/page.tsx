@@ -65,7 +65,8 @@ export default function ProfilePage() {
         },
       });
         await user.reload();
-       setIsSaveSuccess(true);
+      localStorage.setItem("lexredline_profile_complete", "true");
+      setIsSaveSuccess(true);
 
       // Redirect to dashboard after saving
       setTimeout(() => router.push("/dashboard"), 1500);
