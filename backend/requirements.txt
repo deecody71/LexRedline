@@ -13,3 +13,6 @@ httpx>=0.25.0             # HTTP client for JWKS fetching
 # Development
 pytest>=8.0.0
 pytest-cov>=5.0.0
+
+# Optional: LLM-powered analysis
+openai>=1.0.0
