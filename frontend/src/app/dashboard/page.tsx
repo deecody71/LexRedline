@@ -4,8 +4,8 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
-import { FileText, Eye, AlertCircle, CheckCircle2, Clock } from "lucide-react";
-import { getStoredContracts, StoredContract } from "@/lib/storage";
+import { FileText, Eye, AlertCircle, CheckCircle2, Clock, Archive, Trash2, Undo2 } from "lucide-react";
+import { getStoredContracts, getActiveContracts, getArchivedContracts, toggleArchiveContract, deleteContract, StoredContract } from "@/lib/storage";
 
 const sampleContracts = [
   {
@@ -41,6 +41,17 @@ export default function Dashboard() {
   const { user, isLoaded } = useUser();
   const router = useRouter();
   const [contracts, setContracts] = useState<any[]>([]);
+  const [showArchived, setShowArchived] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+
+  const loadContracts = () => {
+    const stored = showArchived ? getArchivedContracts() : getActiveContracts();
+    const formattedStored = stored.map(c => ({
+      ...c,
+      statusIcon: <CheckCircle2 className="w-4 h-4 text-green-500" />
+    }));
+    setContracts([...formattedStored, ...sampleContracts]);
+  };
 
   useEffect(() => {
     if (isLoaded) {
@@ -52,14 +63,20 @@ export default function Dashboard() {
     }
 
     if (isLoaded && user && ((user.unsafeMetadata as any)?.profile || localStorage.getItem("lexredline_profile_complete"))) {
-      const stored = getStoredContracts();
-      const formattedStored = stored.map(c => ({
-        ...c,
-        statusIcon: <CheckCircle2 className="w-4 h-4 text-green-500" />
-      }));
-      setContracts([...formattedStored, ...sampleContracts]);
+      loadContracts();
     }
-  }, [user, isLoaded, router]);
+  }, [user, isLoaded, router, showArchived]);
+
+  const handleToggleArchive = (id: string) => {
+    toggleArchiveContract(id);
+    loadContracts();
+  };
+
+  const handleDelete = (id: string) => {
+    deleteContract(id);
+    setDeleteConfirm(null);
+    loadContracts();
+  };
 
   if (!isLoaded) {
     return (
@@ -80,7 +97,21 @@ export default function Dashboard() {
           <h1 className="text-2xl font-bold text-navy">Contract Reviews</h1>
           <p className="text-slate-500">Monitor and manage your contract risk assessments</p>
         </div>
-        <div className="flex space-x-4">
+        <div className="flex items-center space-x-3">
+          <div className="bg-slate-100 rounded-lg p-1 flex">
+            <button
+              onClick={() => setShowArchived(false)}
+              className={`px-3 py-1.5 rounded text-xs font-bold transition-colors ${!showArchived ? 'bg-white shadow-sm text-navy' : 'text-slate-500 hover:text-slate-700'}`}
+            >
+              Active
+            </button>
+            <button
+              onClick={() => setShowArchived(true)}
+              className={`px-3 py-1.5 rounded text-xs font-bold transition-colors ${showArchived ? 'bg-white shadow-sm text-navy' : 'text-slate-500 hover:text-slate-700'}`}
+            >
+              Archived
+            </button>
+          </div>
           <button 
             onClick={clearHistory}
             className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-800 transition-colors"
@@ -138,13 +169,46 @@ export default function Dashboard() {
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                  <Link
-                    href={`/review/${contract.id}`}
-                    className="text-accent-blue hover:text-blue-800 flex items-center justify-end space-x-1"
-                  >
-                    <Eye className="w-4 h-4" />
-                    <span>View</span>
-                  </Link>
+                  <div className="flex items-center justify-end space-x-1">
+                    <Link
+                      href={`/review/${contract.id}`}
+                      className="text-accent-blue hover:text-blue-800 flex items-center space-x-1 p-1"
+                      title="View"
+                    >
+                      <Eye className="w-4 h-4" />
+                    </Link>
+                    <button
+                      onClick={() => handleToggleArchive(contract.id)}
+                      className="text-slate-400 hover:text-amber-600 p-1 transition-colors"
+                      title={contract.archived ? "Unarchive" : "Archive"}
+                    >
+                      {contract.archived ? <Undo2 className="w-4 h-4" /> : <Archive className="w-4 h-4" />}
+                    </button>
+                    {deleteConfirm === contract.id ? (
+                      <div className="flex items-center space-x-1">
+                        <button
+                          onClick={() => handleDelete(contract.id)}
+                          className="text-red-600 hover:text-red-800 text-xs font-bold px-2 py-1 bg-red-50 rounded transition-colors"
+                        >
+                          Confirm
+                        </button>
+                        <button
+                          onClick={() => setDeleteConfirm(null)}
+                          className="text-slate-400 hover:text-slate-600 text-xs px-1"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => setDeleteConfirm(contract.id)}
+                        className="text-slate-400 hover:text-red-600 p-1 transition-colors"
+                        title="Delete"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
                 </td>
               </tr>
             ))}
