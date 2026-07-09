@@ -81,6 +81,17 @@ export interface ContractSummary {
   created_at: string;
 }
 
+export interface QAResponse {
+  answer: string;
+  model_used?: string;
+}
+
+export interface HelpResponse {
+  answer: string;
+  source?: string;
+  related_questions: string[];
+  model_used?: string;
+}
 
 async function getAuthToken(): Promise<string | null> {
   try {
@@ -174,5 +185,35 @@ export async function getContract(id: string): Promise<AnalysisResult> {
     const errorData = await response.json().catch(() => ({ detail: 'Unknown error' }));
     throw new Error(errorData.detail || `Failed to fetch contract: ${response.status}`);
   }
+  return response.json();
+}
+
+export async function askQuestion(question: string, analysisId?: string): Promise<QAResponse> {
+  const response = await authFetch(`${API_BASE_URL}/qa`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ question, analysis_id: analysisId }),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({ detail: 'Failed to get answer' }));
+    throw new Error(errorData.detail || 'Failed to get answer');
+  }
+
+  return response.json();
+}
+
+export async function getHelpAnswer(question: string): Promise<HelpResponse> {
+  const response = await fetch(`${API_BASE_URL}/help`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ question }),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({ detail: 'Failed to fetch help content' }));
+    throw new Error(errorData.detail || 'Failed to fetch help content');
+  }
+
   return response.json();
 }
