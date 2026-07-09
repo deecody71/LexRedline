@@ -10,6 +10,7 @@ export interface StoredContract {
   riskColor: string;
   status: string;
   result: AnalysisResult;
+  archived?: boolean;
 }
 
 export function saveAnalysisResult(name: string, result: AnalysisResult): StoredContract {
@@ -39,6 +40,33 @@ export function getStoredContracts(): StoredContract[] {
 export function getStoredContractById(id: string): StoredContract | null {
   const contracts = getStoredContracts();
   return contracts.find(c => c.id === id) || null;
+}
+
+export function getActiveContracts(): StoredContract[] {
+  return getStoredContracts().filter(c => !c.archived);
+}
+
+export function getArchivedContracts(): StoredContract[] {
+  return getStoredContracts().filter(c => c.archived);
+}
+
+export function toggleArchiveContract(id: string): StoredContract[] {
+  const contracts = getStoredContracts();
+  const updated = contracts.map(c => {
+    if (c.id === id) {
+      return { ...c, archived: !c.archived };
+    }
+    return c;
+  });
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+  return updated;
+}
+
+export function deleteContract(id: string): StoredContract[] {
+  const contracts = getStoredContracts();
+  const updated = contracts.filter(c => c.id !== id);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+  return updated;
 }
 
 function getRiskColorClass(risk: string): string {
