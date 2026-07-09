@@ -133,3 +133,28 @@ class ModelInfo(BaseModel):
     version: str
     description: str
     supported_clause_types: List[ClauseTypeInfo] = Field(default_factory=list)
+
+
+class QARequest(BaseModel):
+    """Q&A request."""
+    question: str = Field(..., min_length=1, description="User's question about the analysis")
+    analysis_id: Optional[str] = Field(default=None, description="Contract analysis ID to ask about")
+
+
+class QAResponse(BaseModel):
+    """Q&A response."""
+    answer: str
+    model_used: Optional[str] = None
+
+
+class HelpRequest(BaseModel):
+    """Help request."""
+    question: str = Field(..., min_length=1, description="User's help question")
+
+
+class HelpResponse(BaseModel):
+    """Help response."""
+    answer: str
+    source: Optional[str] = None
+    related_questions: List[str] = Field(default_factory=list)
+    model_used: Optional[str] = None
