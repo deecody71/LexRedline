@@ -4,6 +4,7 @@ import "./globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
 import { AnalysisProvider } from "@/context/AnalysisContext";
 import Header from "./Header";
+import HelpWidget from "./HelpWidget";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -26,6 +27,7 @@ export default function RootLayout({
             <main className="min-h-[calc(100vh-4rem)] bg-slate-50">
               {children}
             </main>
+            <HelpWidget />
           </AnalysisProvider>
         </body>
       </html>

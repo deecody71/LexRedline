@@ -23,6 +23,7 @@ export default function Header() {
             <Link href="/dashboard" className="hover:text-blue-300 transition-colors">Dashboard</Link>
             <Link href="/upload" className="hover:text-blue-300 transition-colors">Upload</Link>
             <Link href="/profile" className="hover:text-blue-300 transition-colors">Profile</Link>
+            <Link href="/help" className="hover:text-blue-300 transition-colors">Help</Link>
           </div>
         </div>
         <div className="flex items-center space-x-4">
