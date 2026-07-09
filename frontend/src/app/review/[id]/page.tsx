@@ -24,7 +24,7 @@ export default function ReviewPage() {
       if (!user) {
         router.push("/sign-up");
         return;
-      } else if (!(user.publicMetadata as any)?.profile) {
+        } else if (!(user.unsafeMetadata as any)?.profile && !localStorage.getItem("lexredline_profile_complete")) {
         router.push("/profile");
         return;
       }

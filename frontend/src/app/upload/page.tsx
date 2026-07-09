@@ -23,7 +23,7 @@ export default function UploadPage() {
     if (isLoaded) {
       if (!user) {
         router.push("/sign-up");
-      } else if (!(user.publicMetadata as any)?.profile) {
+      } else if (!(user.unsafeMetadata as any)?.profile && !localStorage.getItem("lexredline_profile_complete")) {
         router.push("/profile");
       }
     }
@@ -118,12 +118,14 @@ export default function UploadPage() {
               : "border-slate-300 hover:border-slate-400 bg-slate-50"
           }`}
         >
-          <input
-            type="file"
-            onChange={handleFileChange}
-            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-            accept=".pdf,.doc,.docx"
-          />
+          {!file && (
+            <input
+              type="file"
+              onChange={handleFileChange}
+              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+              accept=".pdf,.doc,.docx"
+            />
+          )}
           
           {file ? (
             <div className="flex flex-col items-center">

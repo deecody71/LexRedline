@@ -28,7 +28,7 @@ export default function ProfilePage() {
 
   useEffect(() => {
     if (isLoaded && user) {
-      const profile = (user.publicMetadata as any)?.profile;
+      const profile = (user.unsafeMetadata as any)?.profile || JSON.parse(localStorage.getItem("lexredline_profile_data") || "null");
       if (profile) {
         setFormData({
           firstName: profile.firstName || user.firstName || "",
@@ -59,16 +59,18 @@ export default function ProfilePage() {
 
     try {
       await user.update({
-        publicMetadata: {
-          ...user.publicMetadata,
+        unsafeMetadata: {
+          ...(user.unsafeMetadata || {}),
           profile: formData,
         },
       });
+        await user.reload();
+      localStorage.setItem("lexredline_profile_complete", "true");
+      localStorage.setItem("lexredline_profile_data", JSON.stringify(formData));
       setIsSaveSuccess(true);
-      setTimeout(() => setIsSaveSuccess(false), 3000);
-      
-      // If this was onboarding, they can now go to dashboard
-      // router.push("/dashboard");
+
+      // Redirect to dashboard after saving
+      setTimeout(() => router.push("/dashboard"), 1500);
     } catch (err) {
       console.error("Failed to save profile:", err);
       alert("Failed to save profile. Please try again.");
@@ -98,7 +100,7 @@ export default function ProfilePage() {
   }
 
   if (!user) {
-    router.push("/signup");
+    router.push("/sign-up");
     return null;
   }
 

@@ -5,7 +5,7 @@ const nextConfig = {
     return [
       {
         source: '/api/v1/:path*',
-        destination: 'https://lexredline.onrender.com/api/v1/:path*',
+        destination: 'https://lexredline-3ekz.onrender.com/api/v1/:path*',
       },
     ]
   },
