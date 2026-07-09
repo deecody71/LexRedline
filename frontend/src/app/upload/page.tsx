@@ -12,11 +12,23 @@ export default function UploadPage() {
   const { user, isLoaded } = useUser();
   const [file, setFile] = useState<File | null>(null);
   const [contractName, setContractName] = useState("");
+  const [expectations, setExpectations] = useState("");
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [disclaimerAccepted, setDisclaimerAccepted] = useState(false);
   
   const router = useRouter();
   const { setResult } = useAnalysis();
+
+  useEffect(() => {
+    const accepted = localStorage.getItem("lexredline_disclaimer_accepted") === "true";
+    setDisclaimerAccepted(accepted);
+  }, []);
+
+  const handleDisclaimerToggle = (checked: boolean) => {
+    setDisclaimerAccepted(checked);
+    localStorage.setItem("lexredline_disclaimer_accepted", String(checked));
+  };
 
   useEffect(() => {
     if (isLoaded) {
@@ -52,7 +64,7 @@ export default function UploadPage() {
     setError(null);
     
     try {
-      const result = await analyzeFile(file);
+      const result = await analyzeFile(file, expectations);
       saveAnalysisResult(contractName || file.name, result);
       setResult(result);
       router.push(`/review/${result.job_id}`);
@@ -90,6 +102,22 @@ export default function UploadPage() {
             value={contractName}
             onChange={(e) => setContractName(e.target.value)}
             placeholder="e.g. Master Services Agreement - Acme Corp"
+            className="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-accent-blue focus:border-transparent outline-none transition-all"
+          />
+        </div>
+
+        <div className="mb-6">
+          <label className="block text-sm font-medium text-slate-700 mb-1">
+            What are your expectations for this contract?
+          </label>
+          <p className="text-xs text-slate-500 mb-2">
+            Describe what you expect to see in this contract. We'll check how well the contract matches your requirements.
+          </p>
+          <textarea
+            value={expectations}
+            onChange={(e) => setExpectations(e.target.value)}
+            placeholder="e.g. Must include mutual indemnification, Net 30 payment terms, and Delaware governing law."
+            rows={3}
             className="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-accent-blue focus:border-transparent outline-none transition-all"
           />
         </div>
@@ -143,12 +171,25 @@ export default function UploadPage() {
           )}
         </div>
 
+        <div className="mt-6 flex items-start space-x-3 p-4 bg-slate-50 rounded-lg border border-slate-200">
+          <input
+            type="checkbox"
+            id="disclaimer"
+            checked={disclaimerAccepted}
+            onChange={(e) => handleDisclaimerToggle(e.target.checked)}
+            className="mt-1 h-4 w-4 text-accent-blue border-slate-300 rounded focus:ring-accent-blue"
+          />
+          <label htmlFor="disclaimer" className="text-xs text-slate-600 leading-normal cursor-pointer">
+            I acknowledge that <span className="font-bold text-navy">LexRedline</span> is an AI-powered research tool and does not provide legal advice or legal services. The analysis and redlines provided are best-effort recommendations and should be reviewed by a qualified legal professional.
+          </label>
+        </div>
+
         <div className="mt-8">
           <button
             onClick={handleUpload}
-            disabled={!file || isUploading}
+            disabled={!file || isUploading || !disclaimerAccepted}
             className={`w-full py-3 rounded-lg font-bold text-white transition-all flex items-center justify-center space-x-2 ${
-              !file || isUploading
+              !file || isUploading || !disclaimerAccepted
                 ? "bg-slate-300 cursor-not-allowed"
                 : "bg-accent-blue hover:bg-blue-700 shadow-lg shadow-blue-200"
             }`}

@@ -10,6 +10,7 @@ export interface StoredContract {
   riskColor: string;
   status: string;
   result: AnalysisResult;
+  archived?: boolean;
 }
 
 export function saveAnalysisResult(name: string, result: AnalysisResult): StoredContract {
@@ -39,6 +40,30 @@ export function getStoredContracts(): StoredContract[] {
 export function getStoredContractById(id: string): StoredContract | null {
   const contracts = getStoredContracts();
   return contracts.find(c => c.id === id) || null;
+}
+
+export function archiveContract(id: string) {
+  const contracts = getStoredContracts();
+  const index = contracts.findIndex(c => c.id === id);
+  if (index !== -1) {
+    contracts[index].archived = true;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(contracts));
+  }
+}
+
+export function unarchiveContract(id: string) {
+  const contracts = getStoredContracts();
+  const index = contracts.findIndex(c => c.id === id);
+  if (index !== -1) {
+    contracts[index].archived = false;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(contracts));
+  }
+}
+
+export function deleteContract(id: string) {
+  const contracts = getStoredContracts();
+  const filtered = contracts.filter(c => c.id !== id);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(filtered));
 }
 
 function getRiskColorClass(risk: string): string {

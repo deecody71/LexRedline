@@ -16,6 +16,12 @@ export interface AnalysisResult {
   analysis_time_ms: number;
   contract_metadata: Record<string, any>;
   parsed_at: string | null;
+  expectation_match?: {
+    match_percentage: number;
+    matched: string[];
+    unmatched: string[];
+    recommendations: string[];
+  };
 }
 
 export interface Section {
@@ -51,9 +57,12 @@ export interface RedlineSuggestion {
   priority: number;
 }
 
-export async function analyzeFile(file: File): Promise<AnalysisResult> {
+export async function analyzeFile(file: File, expectations?: string): Promise<AnalysisResult> {
   const formData = new FormData();
   formData.append('file', file);
+  if (expectations) {
+    formData.append('expectations', expectations);
+  }
 
   const response = await fetch(`${API_BASE_URL}/analyze/file`, {
     method: 'POST',
