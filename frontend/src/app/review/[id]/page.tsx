@@ -478,7 +478,6 @@ export default function ReviewPage() {
               Overall: {result.overall_risk}
             </div>
           </div>
-          <p className="text-xs text-slate-500">Detected {result.redlines.length} items requiring review</p>
         </div>
 
         {/* Expectation Match Section */}
