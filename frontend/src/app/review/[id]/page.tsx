@@ -1,12 +1,15 @@
 "use client";
 
 import { useState, useEffect, useRef, useMemo } from "react";
-import { ChevronRight, ChevronDown, AlertTriangle, CheckCircle, Info, ArrowRight, FileText, Trash2, Download, Printer } from "lucide-react";
+import { ChevronRight, ChevronDown, AlertTriangle, CheckCircle, Info, ArrowRight, FileText, Trash2, Printer, Download, FileDown, Layers, Loader2 } from "lucide-react";
 import { useAnalysis } from "@/context/AnalysisContext";
 import { useUser } from "@clerk/nextjs";
 import { useParams, useRouter } from "next/navigation";
 import { SAMPLE_DATA } from "@/lib/sampleData";
 import { getStoredContractById, StoredContract } from "@/lib/storage";
+import { Document, Packer, Paragraph, TextRun } from "docx";
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
 
 export default function ReviewPage() {
   const { id } = useParams();
@@ -17,7 +20,9 @@ export default function ReviewPage() {
   const [expandedId, setExpandedId] = useState<number | null>(0);
   const [acceptedRedlines, setAcceptedRedlines] = useState<Set<number>>(new Set());
   const [dismissedRedlines, setDismissedRedlines] = useState<Set<number>>(new Set());
+  const [isExporting, setIsExporting] = useState(false);
   const textContainerRef = useRef<HTMLDivElement>(null);
+  const annotatedContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (isLoaded) {
@@ -99,6 +104,45 @@ export default function ReviewPage() {
     return segments;
   }, [result, acceptedRedlines]);
 
+  // Document view for Annotated PDF (Accepted=Green, Pending=Yellow, Dismissed=Strikethrough)
+  const annotatedSegments = useMemo(() => {
+    if (!result) return [];
+    
+    let text = result.full_text;
+    const segments: { text: string; type?: 'accepted' | 'pending' | 'dismissed'; index?: number }[] = [];
+    
+    const sortedRedlines = result.redlines
+      .map((rl: any, idx: number) => ({ ...rl, originalIndex: idx, pos: text.indexOf(rl.original_text) }))
+      .filter((rl: any) => rl.pos !== -1)
+      .sort((a: any, b: any) => a.pos - b.pos);
+    
+    let lastIndex = 0;
+    for (const rl of sortedRedlines) {
+      if (rl.pos > lastIndex) {
+        segments.push({ text: text.substring(lastIndex, rl.pos) });
+      }
+      
+      const isAccepted = acceptedRedlines.has(rl.originalIndex);
+      const isDismissed = dismissedRedlines.has(rl.originalIndex);
+      
+      if (isAccepted) {
+        segments.push({ text: rl.suggested_text, type: 'accepted', index: rl.originalIndex });
+      } else if (isDismissed) {
+        segments.push({ text: rl.original_text, type: 'dismissed', index: rl.originalIndex });
+      } else {
+        segments.push({ text: rl.original_text, type: 'pending', index: rl.originalIndex });
+      }
+      
+      lastIndex = rl.pos + rl.original_text.length;
+    }
+    
+    if (lastIndex < text.length) {
+      segments.push({ text: text.substring(lastIndex) });
+    }
+    
+    return segments;
+  }, [result, acceptedRedlines, dismissedRedlines]);
+
   const scrollToText = (searchText: string) => {
     if (!textContainerRef.current) return;
     const container = textContainerRef.current;
@@ -140,6 +184,39 @@ export default function ReviewPage() {
 
   const handleExportPDF = () => {
     window.print();
+  };
+
+  const handleAnnotatedPDFExport = async () => {
+    if (!result || !annotatedContainerRef.current) return;
+    
+    setIsExporting(true);
+    try {
+      const element = annotatedContainerRef.current;
+      const canvas = await html2canvas(element, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff'
+      });
+      
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      const imgWidth = canvas.width;
+      const imgHeight = canvas.height;
+      const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
+      const finalWidth = imgWidth * ratio;
+      const finalHeight = imgHeight * ratio;
+      
+      pdf.addImage(imgData, 'PNG', 0, 0, finalWidth, finalHeight);
+      pdf.save(`LexRedline_Annotated_${result.filename.split('.')[0]}.pdf`);
+    } catch (err) {
+      console.error("Annotated PDF Export failed", err);
+      alert("Failed to generate annotated PDF. Please try the basic print option.");
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   const handleExportWord = () => {
@@ -198,6 +275,96 @@ export default function ReviewPage() {
     a.download = `${filename.replace(/\.[^.]+$/, '')}_lexredline_report.doc`;
     a.click();
     URL.revokeObjectURL(url);
+  };
+
+  const handleAdvancedWordExport = async () => {
+    if (!result) return;
+    
+    setIsExporting(true);
+    try {
+      const children: any[] = [
+        new Paragraph({
+          children: [
+            new TextRun({ text: "LexRedline Redlined Contract", bold: true, size: 32 }),
+          ],
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({ text: `Contract: ${result.filename}`, size: 24 }),
+          ],
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({ text: `Exported on: ${new Date().toLocaleString()}`, size: 20 }),
+          ],
+        }),
+        new Paragraph({ text: "" }), // Spacer
+      ];
+
+      // Document processing
+      let text = result.full_text;
+      const sortedRedlines = result.redlines
+        .map((rl: any, idx: number) => ({ ...rl, originalIndex: idx, pos: text.indexOf(rl.original_text) }))
+        .filter((rl: any) => rl.pos !== -1)
+        .sort((a: any, b: any) => a.pos - b.pos);
+
+      let lastIndex = 0;
+      const runChildren: any[] = [];
+      
+      for (const rl of sortedRedlines) {
+        if (rl.pos > lastIndex) {
+          runChildren.push(new TextRun({ text: text.substring(lastIndex, rl.pos) }));
+        }
+
+        const isAccepted = acceptedRedlines.has(rl.originalIndex);
+        
+        if (isAccepted) {
+          // Word Track Changes Markup (Manual simulation)
+          runChildren.push(new TextRun({ 
+            text: rl.original_text, 
+            strike: true,
+            color: "FF0000" // Red for deletion
+          }));
+          runChildren.push(new TextRun({ 
+            text: " " + rl.suggested_text, 
+            bold: true,
+            color: "00B050", // Green for insertion
+            underline: {}
+          }));
+        } else {
+          runChildren.push(new TextRun({ text: rl.original_text }));
+        }
+
+        lastIndex = rl.pos + rl.original_text.length;
+      }
+
+      if (lastIndex < text.length) {
+        runChildren.push(new TextRun({ text: text.substring(lastIndex) }));
+      }
+
+      children.push(new Paragraph({ children: runChildren }));
+
+      const doc = new Document({
+        sections: [{
+          properties: {},
+          children: children,
+        }],
+      });
+
+      const blob = await Packer.toBlob(doc);
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `LexRedline_Redlined_${result.filename.split('.')[0]}.docx`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (err) {
+      console.error("Word Export failed", err);
+      alert("Failed to generate redlined Word document.");
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   if (!result) {
@@ -269,6 +436,41 @@ export default function ReviewPage() {
               <AlertTriangle className="w-5 h-5 text-risk-high mr-2" />
               Risk Analysis
             </h2>
+            <div className="flex gap-2">
+              <button 
+                onClick={handleExportPDF}
+                className="p-1.5 text-slate-400 hover:text-accent-blue hover:bg-blue-50 rounded-md transition-colors"
+                title="Print Report"
+              >
+                <Printer className="w-4 h-4" />
+              </button>
+              <button 
+                onClick={handleAnnotatedPDFExport}
+                className="p-1.5 text-slate-400 hover:text-accent-blue hover:bg-blue-50 rounded-md transition-colors"
+                disabled={isExporting}
+                title="Annotated PDF"
+              >
+                {isExporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Layers className="w-4 h-4" />}
+              </button>
+              <button 
+                onClick={handleExportWord}
+                className="p-1.5 text-slate-400 hover:text-accent-blue hover:bg-blue-50 rounded-md transition-colors"
+                title="Word Report"
+              >
+                <Download className="w-4 h-4" />
+              </button>
+              <button 
+                onClick={handleAdvancedWordExport}
+                className="p-1.5 text-slate-400 hover:text-accent-blue hover:bg-blue-50 rounded-md transition-colors"
+                disabled={isExporting}
+                title="Redlined Word Doc"
+              >
+                {isExporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileDown className="w-4 h-4" />}
+              </button>
+            </div>
+          </div>
+          <div className="flex justify-between items-center">
+            <p className="text-xs text-slate-500">Detected {result.redlines.length} items requiring review</p>
             <div className={`risk-badge ${
               result.overall_risk === 'HIGH' ? 'risk-badge-high' : 
               result.overall_risk === 'MEDIUM' ? 'risk-badge-med' : 'risk-badge-low'
@@ -429,6 +631,122 @@ export default function ReviewPage() {
               </div>
             );
           })}
+        </div>
+      </div>
+
+      {/* Printable Report (hidden on screen) */}
+      <div className="print-only p-8 bg-white text-slate-900">
+        <div className="border-b-2 border-navy pb-4 mb-8">
+          <h1 className="text-3xl font-bold text-navy">LexRedline Analysis Report</h1>
+          <div className="mt-2 text-sm text-slate-600">
+            <p><strong>Contract:</strong> {result.filename}</p>
+            <p><strong>Date Analyzed:</strong> {new Date(result.parsed_at || Date.now()).toLocaleString()}</p>
+            <p><strong>Overall Risk:</strong> {result.overall_risk}</p>
+          </div>
+        </div>
+
+        {result.expectation_match && (
+          <div className="mb-10">
+            <h2 className="text-xl font-bold text-accent-blue border-b border-slate-200 mb-4 pb-2">Contract Expectations Match</h2>
+            <div className="text-2xl font-bold text-accent-blue mb-4">{result.expectation_match.match_percentage}% Match</div>
+            
+            <div className="grid grid-cols-2 gap-8">
+              <div>
+                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Met Expectations</h3>
+                <ul className="space-y-1">
+                  {result.expectation_match.matched.map((item: string, i: number) => (
+                    <li key={i} className="text-sm text-slate-700">✅ {item}</li>
+                  ))}
+                </ul>
+              </div>
+              <div>
+                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Missing / Concerns</h3>
+                <ul className="space-y-1">
+                  {result.expectation_match.unmatched.map((item: string, i: number) => (
+                    <li key={i} className="text-sm text-slate-700">❌ {item}</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+
+            {result.expectation_match.recommendations.length > 0 && (
+              <div className="mt-6 bg-blue-50 p-4 rounded-lg border border-blue-100">
+                <h3 className="text-sm font-bold text-accent-blue uppercase tracking-wider mb-2">AI Recommendations</h3>
+                <ul className="space-y-1">
+                  {result.expectation_match.recommendations.map((item: string, i: number) => (
+                    <li key={i} className="text-sm text-slate-700 flex items-start gap-2">
+                      <span className="text-accent-blue">•</span> {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        )}
+
+        <div>
+          <h2 className="text-xl font-bold text-accent-blue border-b border-slate-200 mb-6 pb-2">Identified Risks & Redlines</h2>
+          <div className="space-y-8">
+            {result.redlines.map((item: any, i: number) => (
+              <div key={i} className="bg-slate-50 border-l-4 border-slate-300 p-6 rounded-r-lg" style={{ pageBreakInside: 'avoid' }}>
+                <div className="flex justify-between items-start mb-2">
+                  <h3 className="font-bold text-navy uppercase">{item.clause_type.replace(/_/g, ' ')}</h3>
+                  <span className="text-xs font-bold px-2 py-1 bg-white border border-slate-200 rounded">PRIORITY {item.priority}</span>
+                </div>
+                <p className="text-sm text-slate-700 mb-4"><strong>Issue:</strong> {item.risk_reason}</p>
+                <div className="grid grid-cols-1 gap-4 mt-4">
+                  <div className="bg-white p-4 border border-slate-200 rounded">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Current Text</span>
+                    <p className="text-sm text-slate-500 italic line-through">"{item.original_text}"</p>
+                  </div>
+                  <div className="bg-white p-4 border border-blue-200 rounded border-l-4 border-l-accent-blue">
+                    <span className="text-[10px] font-bold text-accent-blue uppercase block mb-1">Suggested Redline</span>
+                    <p className="text-sm text-slate-800 font-medium">"{item.suggested_text}"</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="mt-20 pt-8 border-t border-slate-100 text-center text-[10px] text-slate-400">
+          This report was generated by LexRedline AI. It is intended for informational purposes and does not constitute legal advice.
+        </div>
+      </div>
+
+      {/* Annotated Document View for PDF Export (Hidden) */}
+      <div className="fixed -left-[9999px] top-0 no-print" aria-hidden="true">
+        <div 
+          ref={annotatedContainerRef}
+          className="w-[800px] bg-white p-12 font-serif text-slate-800 leading-relaxed"
+        >
+          <div className="border-b-2 border-navy pb-4 mb-8">
+            <h1 className="text-2xl font-bold text-navy">Annotated Contract: {result.filename}</h1>
+            <p className="text-sm text-slate-500 mt-1 uppercase tracking-widest font-sans">
+              LexRedline AI Analysis • {new Date().toLocaleDateString()}
+            </p>
+          </div>
+          
+          <div className="whitespace-pre-wrap text-base">
+            {annotatedSegments.map((segment, i) => {
+              let className = "px-0.5 rounded-sm ";
+              if (segment.type === 'accepted') className += "bg-green-100 text-green-900 border-b border-green-300";
+              if (segment.type === 'pending') className += "bg-yellow-100 text-yellow-900 border-b border-yellow-300";
+              if (segment.type === 'dismissed') className += "line-through text-slate-400";
+              
+              return (
+                <span key={i} className={className}>
+                  {segment.text}
+                </span>
+              );
+            })}
+          </div>
+
+          <div className="mt-12 pt-6 border-t border-slate-100 text-[10px] text-slate-400 text-center font-sans">
+            LEGEND: <span className="bg-green-100 px-1 border-b border-green-300">Accepted Redline</span> | 
+            <span className="bg-yellow-100 px-1 border-b border-yellow-300 ml-2">Pending Review</span> | 
+            <span className="line-through ml-2">Dismissed</span>
+          </div>
         </div>
       </div>
     </div>
