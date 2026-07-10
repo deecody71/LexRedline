@@ -176,3 +176,34 @@ export async function getContract(id: string): Promise<AnalysisResult> {
   }
   return response.json();
 }
+
+export interface HelpResponse {
+  answer: string;
+  related_questions: string[];
+  source?: string;
+}
+
+
+export interface QAResponse {
+  answer: string;
+}
+
+export async function getHelpAnswer(question: string): Promise<HelpResponse> {
+  const response = await fetch(`${API_BASE_URL}/help`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ question }),
+  });
+  if (!response.ok) throw new Error("Help request failed");
+  return response.json();
+}
+
+export async function askQuestion(question: string, analysisId?: string): Promise<QAResponse> {
+  const response = await authFetch(`${API_BASE_URL}/qa`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ question, analysis_id: analysisId }),
+  });
+  if (!response.ok) throw new Error("QA request failed");
+  return response.json();
+}
