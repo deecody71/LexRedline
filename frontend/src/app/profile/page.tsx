@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useUser } from "@clerk/nextjs";
+import { useUser, useClerk } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
-import { Check, Save, Loader2, User } from "lucide-react";
+import { Check, Save, Loader2, User, Trash2, AlertTriangle } from "lucide-react";
 import preferences from "@/lib/profile_preferences.json";
 
 const INDUSTRIES = ["Legal", "Finance", "Tech", "IT Services", "Products", "Healthcare", "Manufacturing", "Other"];
@@ -11,9 +11,12 @@ const ROLES = ["Reviewer/Signer", "Creator", "Both"];
 
 export default function ProfilePage() {
   const { user, isLoaded } = useUser();
+  const { signOut } = useClerk();
   const router = useRouter();
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setIsSaveSuccess] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const [formData, setFormData] = useState({
     firstName: "",
@@ -89,6 +92,24 @@ export default function ProfilePage() {
         return { ...prev, [key]: [...current, id] };
       }
     });
+  };
+
+  const handleDeleteAccount = async () => {
+    if (!user) return;
+    setIsDeleting(true);
+    try {
+      // Clear all local data
+      localStorage.clear();
+      // Delete the Clerk user account
+      await user.destroy();
+      // Sign out
+      await signOut();
+      router.push("/");
+    } catch (err) {
+      console.error("Failed to delete account:", err);
+      alert("Failed to delete account. Please try again.");
+      setIsDeleting(false);
+    }
   };
 
   if (!isLoaded) {
@@ -283,6 +304,47 @@ export default function ProfilePage() {
             </button>
           </div>
         </form>
+
+        {/* Delete Account */}
+        <div className="mt-12 p-6 bg-red-50 border border-red-200 rounded-xl">
+          <div className="flex items-start gap-4">
+            <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center flex-shrink-0">
+              <AlertTriangle className="w-5 h-5 text-red-600" />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-sm font-bold text-red-900">Delete Account</h3>
+              <p className="text-xs text-red-700 mt-1 mb-4">
+                Permanently delete your account and all stored contracts. This action cannot be undone.
+              </p>
+              {showDeleteConfirm ? (
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={handleDeleteAccount}
+                    disabled={isDeleting}
+                    className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-xs font-bold transition-colors disabled:opacity-50 flex items-center gap-2"
+                  >
+                    {isDeleting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+                    {isDeleting ? "Deleting..." : "Yes, delete my account"}
+                  </button>
+                  <button
+                    onClick={() => setShowDeleteConfirm(false)}
+                    className="text-xs font-bold text-slate-600 hover:text-slate-800 transition-colors"
+                    disabled={isDeleting}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setShowDeleteConfirm(true)}
+                  className="text-xs font-bold text-red-600 hover:text-red-800 transition-colors underline underline-offset-2"
+                >
+                  Delete my account and all data
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
