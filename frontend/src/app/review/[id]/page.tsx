@@ -380,7 +380,7 @@ export default function ReviewPage() {
     <div className="flex h-[calc(100vh-4rem)]">
       {/* Left Pane - Document View */}
       <div className="flex-1 overflow-y-auto bg-slate-100 p-4">
-        <div className="max-w-3xl mx-auto bg-white shadow-lg border border-slate-200 rounded-sm p-8 min-h-full font-serif text-slate-800 leading-relaxed">
+        <div className="bg-white shadow-lg border border-slate-200 rounded-sm p-8 min-h-full font-serif text-slate-800 leading-relaxed">
           <div className="flex justify-between items-center mb-4 pb-3 border-b border-slate-100">
             <div className="flex items-center space-x-2">
               <FileText className="w-5 h-5 text-accent-blue" />
