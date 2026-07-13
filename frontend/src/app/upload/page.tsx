@@ -15,6 +15,7 @@ export default function UploadPage() {
   const [expectations, setExpectations] = useState("");
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [disclaimerAccepted, setDisclaimerAccepted] = useState(false);
   
   const router = useRouter();
   const { setResult } = useAnalysis();
@@ -162,12 +163,30 @@ export default function UploadPage() {
           )}
         </div>
 
-        <div className="mt-8">
+        {/* Legal Disclaimer */}
+        <div className="mt-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+          <label className="flex items-start gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={disclaimerAccepted}
+              onChange={(e) => setDisclaimerAccepted(e.target.checked)}
+              className="mt-1 h-4 w-4 rounded border-slate-300 text-accent-blue focus:ring-accent-blue"
+            />
+            <div className="text-xs text-amber-900 leading-relaxed">
+              <strong>⚠ Not Legal Advice:</strong> I understand that LexRedline is an AI-powered analysis tool and 
+              does not provide legal advice. The output is for informational purposes only and does not 
+              create an attorney-client relationship. I should consult a qualified attorney for any 
+              legal decisions. <a href="/terms" target="_blank" className="text-accent-blue hover:underline">View Terms</a>.
+            </div>
+          </label>
+        </div>
+
+        <div className="mt-6">
           <button
             onClick={handleUpload}
-            disabled={!file || isUploading}
+            disabled={!file || !disclaimerAccepted || isUploading}
             className={`w-full py-3 rounded-lg font-bold text-white transition-all flex items-center justify-center space-x-2 ${
-              !file || isUploading
+              !file || !disclaimerAccepted || isUploading
                 ? "bg-slate-300 cursor-not-allowed"
                 : "bg-accent-blue hover:bg-blue-700 shadow-lg shadow-blue-200"
             }`}
