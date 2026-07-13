@@ -380,7 +380,7 @@ export default function ReviewPage() {
     <div className="flex flex-col lg:flex-row h-[calc(100vh-4rem)]">
       {/* Left Pane - Document View */}
       <div className="flex-1 overflow-y-auto bg-slate-100 p-4 min-w-0 min-h-[40vh] lg:min-h-full">
-        <div className="bg-white shadow-lg border border-slate-200 rounded-sm p-4 sm:p-6 lg:p-8 font-serif text-slate-800 leading-relaxed">
+        <div className="bg-white shadow-lg border border-slate-200 rounded-sm p-4 sm:p-6 lg:p-8 font-serif leading-relaxed">
           <div className="flex justify-between items-center mb-4 pb-3 border-b border-slate-100">
             <div className="flex items-center space-x-2">
               <FileText className="w-5 h-5 text-accent-blue" />
@@ -409,9 +409,11 @@ export default function ReviewPage() {
           
           <div 
             ref={textContainerRef}
-            className="whitespace-pre-wrap font-serif text-base sm:text-lg text-slate-800 leading-8"
+            className="whitespace-pre-wrap font-serif text-base sm:text-lg text-black leading-8"
+            style={{ color: '#000000 !important', fontSize: '18px' }}
           >
-            {processedTextSegments.map((segment, i) => (
+            {processedTextSegments.length > 0 ? (
+              processedTextSegments.map((segment, i) => (
               <span 
                 key={i} 
                 className={segment.isAccepted ? "bg-green-100 text-green-900 px-1 rounded border-b border-green-300" : ""}
@@ -419,7 +421,12 @@ export default function ReviewPage() {
               >
                 {segment.text}
               </span>
-            ))}
+            ))
+          ) : (
+            <div className="text-black break-words" style={{ color: '#000000' }}>
+              {result.full_text || "No contract text available."}
+            </div>
+          )}
           </div>
           
           <div className="mt-12 pt-8 border-t border-slate-200 text-slate-400 text-xs italic font-sans text-center">
