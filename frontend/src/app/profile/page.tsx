@@ -125,7 +125,7 @@ export default function ProfilePage() {
   }
 
   if (!user) {
-    router.push("/sign-up");
+    router.push("/sign-in");
     return null;
   }
 

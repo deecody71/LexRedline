@@ -56,7 +56,7 @@ export default function Dashboard() {
   useEffect(() => {
     if (isLoaded) {
       if (!user) {
-        router.push("/sign-up");
+        router.push("/sign-in");
        } else if (!(user.unsafeMetadata as any)?.profile && !localStorage.getItem("lexredline_profile_complete")) {
         router.push("/profile");
       }
