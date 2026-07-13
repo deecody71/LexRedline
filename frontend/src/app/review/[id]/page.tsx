@@ -377,14 +377,14 @@ export default function ReviewPage() {
   }
 
   return (
-    <div className="flex flex-col md:flex-row h-[calc(100vh-4rem)]">
+    <div className="flex flex-col lg:flex-row h-[calc(100vh-4rem)]">
       {/* Left Pane - Document View */}
-      <div className="flex-1 overflow-y-auto bg-slate-100 p-4 min-w-0">
-        <div className="bg-white shadow-lg border border-slate-200 rounded-sm p-6 md:p-8 font-serif text-slate-800 leading-relaxed">
+      <div className="flex-1 overflow-y-auto bg-slate-100 p-4 min-w-0 min-h-[40vh] lg:min-h-full">
+        <div className="bg-white shadow-lg border border-slate-200 rounded-sm p-4 sm:p-6 lg:p-8 font-serif text-slate-800 leading-relaxed">
           <div className="flex justify-between items-center mb-4 pb-3 border-b border-slate-100">
             <div className="flex items-center space-x-2">
               <FileText className="w-5 h-5 text-accent-blue" />
-              <span className="text-xs md:text-sm font-bold text-slate-500 uppercase tracking-widest">{result.filename}</span>
+              <span className="text-sm font-bold text-slate-500 uppercase tracking-widest">{result.filename}</span>
             </div>
             <div className="flex items-center space-x-2">
               <button
@@ -409,7 +409,7 @@ export default function ReviewPage() {
           
           <div 
             ref={textContainerRef}
-            className="whitespace-pre-wrap font-serif text-base md:text-lg text-slate-800"
+            className="whitespace-pre-wrap font-serif text-base sm:text-lg text-slate-800 leading-8"
           >
             {processedTextSegments.map((segment, i) => (
               <span 
@@ -429,8 +429,8 @@ export default function ReviewPage() {
       </div>
 
       {/* Right Pane - Annotations */}
-      <div className="w-full md:w-[450px] border-t md:border-t-0 md:border-l border-slate-200 bg-white overflow-y-auto">
-                <div className="p-4 md:p-6 border-b border-slate-200 bg-slate-50 sticky top-0 z-10">
+      <div className="w-full lg:w-[450px] border-t lg:border-t-0 lg:border-l border-slate-200 bg-white overflow-y-auto">
+                <div className="p-4 lg:p-6 border-b border-slate-200 bg-slate-50 sticky top-0 z-10">
                   <div className="flex justify-between items-center mb-1">
                     <h2 className="text-sm font-bold text-navy flex items-center">
                       <AlertTriangle className="w-3.5 h-3.5 text-risk-high mr-1.5" />
