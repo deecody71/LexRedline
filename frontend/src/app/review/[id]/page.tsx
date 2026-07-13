@@ -429,8 +429,8 @@ export default function ReviewPage() {
       </div>
 
       {/* Right Pane - Annotations */}
-      <div className="w-[360px] border-l border-slate-200 bg-white overflow-y-auto">
-        <div className="p-3 border-b border-slate-200 bg-slate-50 sticky top-0 z-10">
+      <div className="w-[450px] border-l border-slate-200 bg-white overflow-y-auto">
+                <div className="p-6 border-b border-slate-200 bg-slate-50 sticky top-0 z-10">
                   <div className="flex justify-between items-center mb-1">
                     <h2 className="text-sm font-bold text-navy flex items-center">
                       <AlertTriangle className="w-3.5 h-3.5 text-risk-high mr-1.5" />
