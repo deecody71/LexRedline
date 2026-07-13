@@ -379,9 +379,9 @@ export default function ReviewPage() {
   return (
     <div className="flex h-[calc(100vh-4rem)] overflow-hidden">
       {/* Left Pane - Document View */}
-      <div className="flex-1 overflow-y-auto bg-slate-100 p-8">
-        <div className="max-w-3xl mx-auto bg-white shadow-lg border border-slate-200 rounded-sm p-12 min-h-full font-serif text-slate-800 leading-relaxed">
-          <div className="flex justify-between items-center mb-8 pb-4 border-b border-slate-100">
+      <div className="flex-1 overflow-y-auto bg-slate-100 p-4">
+        <div className="max-w-3xl mx-auto bg-white shadow-lg border border-slate-200 rounded-sm p-8 min-h-full font-serif text-slate-800 leading-relaxed">
+          <div className="flex justify-between items-center mb-4 pb-3 border-b border-slate-100">
             <div className="flex items-center space-x-2">
               <FileText className="w-5 h-5 text-accent-blue" />
               <span className="text-sm font-bold text-slate-500 uppercase tracking-widest">{result.filename}</span>
@@ -429,57 +429,55 @@ export default function ReviewPage() {
       </div>
 
       {/* Right Pane - Annotations */}
-      <div className="w-[450px] border-l border-slate-200 bg-white overflow-y-auto">
-        <div className="p-6 border-b border-slate-200 bg-slate-50 sticky top-0 z-10">
-          <div className="flex justify-between items-center mb-2">
-            <h2 className="text-lg font-bold text-navy flex items-center">
-              <AlertTriangle className="w-5 h-5 text-risk-high mr-2" />
-              Risk Analysis
-            </h2>
-            <div className="flex gap-2">
-              <button 
-                onClick={handleExportPDF}
-                className="p-1.5 text-slate-400 hover:text-accent-blue hover:bg-blue-50 rounded-md transition-colors"
-                title="Print Report"
-              >
-                <Printer className="w-4 h-4" />
-              </button>
-              <button 
-                onClick={handleAnnotatedPDFExport}
-                className="p-1.5 text-slate-400 hover:text-accent-blue hover:bg-blue-50 rounded-md transition-colors"
-                disabled={isExporting}
-                title="Annotated PDF"
-              >
-                {isExporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Layers className="w-4 h-4" />}
-              </button>
-              <button 
-                onClick={handleExportWord}
-                className="p-1.5 text-slate-400 hover:text-accent-blue hover:bg-blue-50 rounded-md transition-colors"
-                title="Word Report"
-              >
-                <Download className="w-4 h-4" />
-              </button>
-              <button 
-                onClick={handleAdvancedWordExport}
-                className="p-1.5 text-slate-400 hover:text-accent-blue hover:bg-blue-50 rounded-md transition-colors"
-                disabled={isExporting}
-                title="Redlined Word Doc"
-              >
-                {isExporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileDown className="w-4 h-4" />}
-              </button>
-            </div>
-          </div>
-          <div className="flex justify-between items-center">
-            <p className="text-xs text-slate-500">Detected {result.redlines.length} items requiring review</p>
-            <div className={`risk-badge ${
-              result.overall_risk === 'HIGH' ? 'risk-badge-high' : 
-              result.overall_risk === 'MEDIUM' ? 'risk-badge-med' : 'risk-badge-low'
-            }`}>
-              Overall: {result.overall_risk}
-            </div>
-          </div>
-          <p className="text-xs text-slate-500">Detected {result.redlines.length} items requiring review</p>
-        </div>
+      <div className="w-[360px] border-l border-slate-200 bg-white overflow-y-auto">
+        <div className="p-3 border-b border-slate-200 bg-slate-50 sticky top-0 z-10">
+                  <div className="flex justify-between items-center mb-1">
+                    <h2 className="text-sm font-bold text-navy flex items-center">
+                      <AlertTriangle className="w-3.5 h-3.5 text-risk-high mr-1.5" />
+                      Analysis
+                    </h2>
+                    <div className="flex gap-0.5">
+                      <button
+                        onClick={handleExportPDF}
+                        className="p-1 text-slate-400 hover:text-accent-blue hover:bg-blue-50 rounded transition-colors"
+                        title="Print Report"
+                      >
+                        <Printer className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={handleAnnotatedPDFExport}
+                        className="p-1 text-slate-400 hover:text-accent-blue hover:bg-blue-50 rounded transition-colors"
+                        disabled={isExporting}
+                        title="Annotated PDF"
+                      >
+                        {isExporting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Layers className="w-3.5 h-3.5" />}
+                      </button>
+                      <button
+                        onClick={handleExportWord}
+                        className="p-1 text-slate-400 hover:text-accent-blue hover:bg-blue-50 rounded transition-colors"
+                        title="Word Report"
+                      >
+                        <Download className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={handleAdvancedWordExport}
+                        className="p-1 text-slate-400 hover:text-accent-blue hover:bg-blue-50 rounded transition-colors"
+                        disabled={isExporting}
+                        title="Redlined Word Doc"
+                      >
+                        {isExporting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FileDown className="w-3.5 h-3.5" />}
+                      </button>
+                    </div>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <p className="text-[10px] text-slate-500">{result.redlines.length} flagged</p>
+                    <div className={`risk-badge ${
+                      result.overall_risk === 'HIGH' ? 'risk-badge-high' :
+                      result.overall_risk === 'MEDIUM' ? 'risk-badge-med' : 'risk-badge-low'
+                    }`}>
+                      {result.overall_risk}
+                    </div>
+                  </div>
 
         {/* Expectation Match Section */}
         {result.expectation_match && (
