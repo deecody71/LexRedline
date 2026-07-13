@@ -377,9 +377,9 @@ export default function ReviewPage() {
   }
 
   return (
-    <div className="flex flex-col lg:flex-row h-[calc(100vh-4rem)]">
+    <div className="flex flex-col lg:flex-row h-auto lg:h-[calc(100vh-4rem)]">
       {/* Left Pane - Document View */}
-      <div className="flex-1 overflow-y-auto bg-slate-100 p-4 min-w-0 min-h-[40vh] lg:min-h-full">
+      <div className="w-full lg:flex-1 overflow-y-auto bg-slate-100 p-4 min-h-[50vh] lg:min-h-full">
         <div className="bg-white shadow-lg border border-slate-200 rounded-sm p-4 sm:p-6 lg:p-8 font-serif leading-relaxed">
           <div className="flex justify-between items-center mb-4 pb-3 border-b border-slate-100">
             <div className="flex items-center space-x-2">
