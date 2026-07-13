@@ -478,6 +478,7 @@ export default function ReviewPage() {
                       {result.overall_risk}
                     </div>
                   </div>
+                </div>
 
         {/* Expectation Match Section */}
         {result.expectation_match && (

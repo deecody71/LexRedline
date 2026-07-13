@@ -98,10 +98,14 @@ export default function ProfilePage() {
     if (!user) return;
     setIsDeleting(true);
     try {
+      // Call server API to delete the Clerk user account
+      const res = await fetch("/api/delete-account", { method: "POST" });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to delete account");
+      }
       // Clear all local data
       localStorage.clear();
-      // Delete the Clerk user account
-      await user.destroy();
       // Sign out
       await signOut();
       router.push("/");
