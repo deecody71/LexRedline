@@ -379,7 +379,7 @@ export default function ReviewPage() {
   return (
     <div className="flex flex-col lg:flex-row w-full h-auto lg:h-[calc(100vh-4rem)]">
       {/* Left Pane - Document View */}
-      <div className="w-full lg:w-[60%] xl:w-[65%] 2xl:w-[70%] overflow-auto bg-slate-100 p-4 min-h-[50vh] lg:min-h-full">
+      <div className="w-full lg:w-[75%] xl:w-[80%] 2xl:w-[82%] overflow-auto bg-slate-100 p-4 min-h-[50vh] lg:min-h-full">
         <div className="bg-white shadow-lg border border-slate-200 rounded-sm p-4 sm:p-6 lg:p-8 font-serif leading-relaxed">
           <div className="flex justify-between items-center mb-4 pb-3 border-b border-slate-100">
             <div className="flex items-center space-x-2">
@@ -436,7 +436,7 @@ export default function ReviewPage() {
       </div>
 
       {/* Right Pane - Annotations */}
-      <div className="w-full lg:w-[40%] xl:w-[35%] 2xl:w-[30%] border-t lg:border-t-0 lg:border-l border-slate-200 bg-white overflow-y-auto">
+      <div className="w-full lg:w-[25%] xl:w-[20%] 2xl:w-[18%] border-t lg:border-t-0 lg:border-l border-slate-200 bg-white overflow-y-auto">
                 <div className="p-4 lg:p-6 border-b border-slate-200 bg-slate-50 sticky top-0 z-10">
                   <div className="flex justify-between items-center mb-1">
                     <h2 className="text-sm font-bold text-navy flex items-center">
