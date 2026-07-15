@@ -204,19 +204,21 @@ export default function ProfilePage() {
           {/* Role Selection */}
           <div>
             <label className="block text-sm font-semibold text-slate-700 mb-4 text-center text-lg">I am a contract...</label>
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
               {ROLES.map(role => (
                 <button
                   key={role}
                   type="button"
                   onClick={() => setFormData({ ...formData, role })}
-                  className={`py-4 px-2 rounded-xl border-2 transition-all font-bold text-sm text-center ${
+                  className={`py-3 sm:py-4 px-3 sm:px-2 rounded-xl border-2 transition-all font-bold text-sm text-center ${
                     formData.role === role
                       ? "border-accent-blue bg-blue-50 text-accent-blue shadow-md"
                       : "border-slate-200 text-slate-500 hover:border-slate-300 hover:bg-slate-50"
                   }`}
                 >
-                  {role}
+                  {role === "Reviewer/Signer" ? (
+                    <><span className="hidden sm:inline">Reviewer/Signer</span><span className="sm:hidden">Reviewer</span></>
+                  ) : role}
                 </button>
               ))}
             </div>
