@@ -386,24 +386,24 @@ export default function ReviewPage() {
               <FileText className="w-5 h-5 text-accent-blue" />
               <span className="text-sm font-bold text-slate-500 uppercase tracking-widest">{result.filename}</span>
             </div>
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center gap-1 sm:gap-2 flex-wrap justify-end">
               <button
                 onClick={handleExportPDF}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-accent-blue text-white rounded text-xs font-bold hover:bg-blue-700 transition-colors shadow-sm print:hidden"
+                className="flex items-center gap-1 px-2 sm:px-3 py-1.5 bg-accent-blue text-white rounded text-xs font-bold hover:bg-blue-700 transition-colors shadow-sm print:hidden"
                 title="Export as PDF"
               >
                 <Printer className="w-3.5 h-3.5" />
-                PDF
+                <span className="hidden sm:inline">PDF</span>
               </button>
               <button
                 onClick={handleExportWord}
-                className="flex items-center gap-1.5 px-3 py-1.5 border border-accent-blue text-accent-blue rounded text-xs font-bold hover:bg-blue-50 transition-colors print:hidden"
+                className="flex items-center gap-1 px-2 sm:px-3 py-1.5 border border-accent-blue text-accent-blue rounded text-xs font-bold hover:bg-blue-50 transition-colors print:hidden"
                 title="Export as Word document"
               >
                 <Download className="w-3.5 h-3.5" />
-                Word
+                <span className="hidden sm:inline">Word</span>
               </button>
-              <span className="text-xs text-slate-400 font-sans tracking-tighter">Parsed at: {result.parsed_at ? new Date(result.parsed_at).toLocaleString() : 'N/A'}</span>
+              <span className="hidden sm:inline text-[10px] sm:text-xs text-slate-400 font-sans tracking-tighter">Parsed: {result.parsed_at ? new Date(result.parsed_at).toLocaleString() : 'N/A'}</span>
             </div>
           </div>
           
