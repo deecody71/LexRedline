@@ -389,7 +389,7 @@ export default function ReviewPage() {
             <div className="flex items-center gap-1 sm:gap-2 flex-wrap justify-end">
               <button
                 onClick={handleExportPDF}
-                className="flex items-center gap-1 px-2 sm:px-3 py-1.5 bg-accent-blue text-white rounded text-xs font-bold hover:bg-blue-700 transition-colors shadow-sm print:hidden"
+                className="hidden sm:flex items-center gap-1 px-2 sm:px-3 py-1.5 bg-accent-blue text-white rounded text-xs font-bold hover:bg-blue-700 transition-colors shadow-sm print:hidden"
                 title="Export as PDF"
               >
                 <Printer className="w-3.5 h-3.5" />
@@ -397,7 +397,7 @@ export default function ReviewPage() {
               </button>
               <button
                 onClick={handleExportWord}
-                className="flex items-center gap-1 px-2 sm:px-3 py-1.5 border border-accent-blue text-accent-blue rounded text-xs font-bold hover:bg-blue-50 transition-colors print:hidden"
+                className="hidden sm:flex items-center gap-1 px-2 sm:px-3 py-1.5 border border-accent-blue text-accent-blue rounded text-xs font-bold hover:bg-blue-50 transition-colors print:hidden"
                 title="Export as Word document"
               >
                 <Download className="w-3.5 h-3.5" />
