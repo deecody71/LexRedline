@@ -91,13 +91,13 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="flex justify-between items-center mb-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 sm:mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-navy">Contract Reviews</h1>
-          <p className="text-slate-500">Monitor and manage your contract risk assessments</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-navy">Contract Reviews</h1>
+          <p className="text-sm text-slate-500">Monitor and manage your contract risk assessments</p>
         </div>
-        <div className="flex items-center space-x-3">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full sm:w-auto">
           <div className="bg-slate-100 rounded-lg p-1 flex">
             <button
               onClick={() => setShowArchived(false)}
@@ -114,18 +114,18 @@ export default function Dashboard() {
           </div>
           <button 
             onClick={clearHistory}
-            className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-800 transition-colors"
+            className="px-3 py-1.5 text-sm font-medium text-slate-600 hover:text-slate-800 transition-colors"
           >
             Clear History
           </button>
-          <Link href="/upload" className="btn-primary flex items-center space-x-2">
+          <Link href="/upload" className="btn-primary flex items-center justify-center space-x-2 text-sm px-4 py-2 flex-1 sm:flex-none">
             <span>Upload Contract</span>
           </Link>
         </div>
       </div>
 
-      <div className="bg-white shadow-sm border border-slate-200 rounded-lg overflow-hidden">
-        <table className="min-w-full divide-y divide-slate-200">
+      <div className="bg-white shadow-sm border border-slate-200 rounded-lg overflow-x-auto">
+        <table className="min-w-[600px] w-full divide-y divide-slate-200">
           <thead className="bg-slate-50">
             <tr>
               <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
