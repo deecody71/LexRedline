@@ -2,7 +2,7 @@ import { SignUp } from "@clerk/nextjs";
 
 export default function SignUpPage() {
   return (
-    <div className="flex min-h-screen items-start sm:items-center justify-center bg-slate-50 px-4 pt-8 sm:pt-0">
+    <div className="flex min-h-screen items-start sm:items-center justify-start sm:justify-center bg-slate-50 px-4 pt-8 sm:pt-0">
       <div className="w-full max-w-md">
         <div className="text-left sm:text-center mb-8">
           <h1 className="text-3xl font-bold text-navy">Create Your Account</h1>
